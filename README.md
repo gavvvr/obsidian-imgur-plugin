@@ -1,45 +1,28 @@
-## Obsidian Sample Plugin
+Obsidian Imgur Plugin
+===
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+This plugin uploads images from your clipboard right to [imgur.com](https://imgur.com/)
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+![obsidian-imgur-plugin-demo](https://user-images.githubusercontent.com/1719646/104514289-080e2480-5602-11eb-8a1d-c59feb37cb4f.gif)
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+Getting started
+---
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+All you need to start using the plugin is imgur.com **Client ID**. 
 
+![image](https://user-images.githubusercontent.com/1719646/104515726-3bea4980-5604-11eb-92c5-9e448ff9c364.png)
 
-### Releasing new releases
+If you do not have an imgur.com account, you need to [get one](https://imgur.com/register) first.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments.
-- Publish the release.
+When you sign in, go to https://api.imgur.com/oauth2/addclient 
+and generate **Client ID** for Obsidan:
+- provide application name, i.e. "Obsidian"
+- choose "OAuth 2 authorization without a callback URL"
+- and specify your e-mail
 
-### Adding your plugin to the community plugin list
-
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-### How to use
-
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
-
-### Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-### API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+### Notes:
+- You only need **Client ID**, Client secret is not required.
+- Images uploaded by thins plugin get posted "anonymously" (without being tied to your imgur account). 
+  So you will not find pasted images in your imgur.com account.
+- There are daily [upload limits](https://apidocs.imgur.com/#rate-limits), 
+  but reaching them by manually making notes is hard to imagine.
