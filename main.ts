@@ -14,7 +14,7 @@ export default class ImgurPlugin extends Plugin {
     readonly cmAndHandlersMap = new Map;
 
     async loadSettings() {
-        this.settings = Object.assign(DEFAULT_SETTINGS, await this.loadData());
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     }
 
     async saveSettings() {
