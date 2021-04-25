@@ -1,7 +1,8 @@
 Obsidian Imgur Plugin
 ===
 
-This plugin uploads images from your clipboard right to [imgur.com](https://imgur.com/)
+This plugin uploads images to [imgur.com](https://imgur.com/).
+You can either paste right from your clipboard or drag and drop multiple images from your filesystem.
 
 ![obsidian-imgur-plugin-demo](https://user-images.githubusercontent.com/1719646/104514289-080e2480-5602-11eb-8a1d-c59feb37cb4f.gif)
 
@@ -24,5 +25,9 @@ and generate **Client ID** for Obsidan:
 - You only need **Client ID**, Client secret is not required.
 - Images uploaded by thins plugin get posted "anonymously" (without being tied to your imgur account). 
   So you will not find pasted images in your imgur.com account.
+  
+### Limitations
+- you can not paste animated gifs from the clipboard (they are copied as static images to the clipboard). 
+  Use drag and drop instead if you want to upload animated gif.
 - There are daily [upload limits](https://apidocs.imgur.com/#rate-limits), 
   but reaching them by manually making notes is hard to imagine.
