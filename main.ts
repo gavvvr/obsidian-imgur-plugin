@@ -26,30 +26,57 @@ export default class ImgurPlugin extends Plugin {
     }
 
     restoreOriginalHandlers() {
-        this.cmAndHandlersMap.forEach((originalHandler, cm) => {
-            cm._handlers.paste[0] = originalHandler;
+        this.cmAndHandlersMap.forEach((originalHandlers, cm) => {
+            cm._handlers.drop[0] = originalHandlers.drop;
+            cm._handlers.paste[0] = originalHandlers.paste;
         })
     }
 
     async onload() {
         await this.loadSettings();
         this.addSettingTab(new ImgurSettingTab(this.app, this));
-        this.setupImgurPasteHandler();
+        this.setupImgurHandlers();
     }
 
-    setupImgurPasteHandler() {
+    setupImgurHandlers() {
         this.registerCodeMirror((cm: any) => {
-            let originalPasteHandler = this.backupOriginalPasteHandler(cm);
+            let originalHandlers = this.backupOriginalHandlers(cm);
+
+            cm._handlers.drop[0] = (_: any, e: DragEvent) => {
+                if (!this.settings.clientId) {
+                    console.warn("Please either set imgur client id or disable the plugin");
+                    return originalHandlers.drop(_, e);
+                }
+
+                if (e.dataTransfer.types.length !== 1 || e.dataTransfer.types[0] !== "Files") {
+                    return originalHandlers.drop(_, e);
+                }
+
+                let files = e.dataTransfer.files;
+                for (let i = 0; i < files.length; i++) {
+                    if (!files[i].type.startsWith("image")) {
+                        // using original handlers if at least one of drag-and drop files is not an image
+                        // It is not possible to call DragEvent.dataTransfer#clearData(images) here
+                        // to split images and non-images processing
+                        return originalHandlers.drop(_, e);
+                    }
+                }
+
+                let images = e.dataTransfer.files
+                for (let i = 0; i < images.length; i++) {
+                    this.uploadFileAndEmbedImgurImage(images[i]).catch(console.error);
+                }
+            };
 
             cm._handlers.paste[0] = (_: any, e: ClipboardEvent) => {
                 if (!this.settings.clientId) {
                     console.warn("Please either set imgur client id or disable the plugin");
-                    return originalPasteHandler(_, e);
+                    return originalHandlers.paste(_, e);
                 }
 
                 let files = e.clipboardData.files;
                 if (files.length === 0 || !files[0].type.startsWith("image")) {
-                    return originalPasteHandler(_, e);
+                    return originalHandlers.paste(_, e);
                 }
 
                 for (let i = 0; i < files.length; i++) {
@@ -59,10 +86,11 @@ export default class ImgurPlugin extends Plugin {
         });
     }
 
-    backupOriginalPasteHandler(cm: any) {
+    backupOriginalHandlers(cm: any) {
         if (!this.cmAndHandlersMap.has(cm)) {
-            let originalHandler = cm._handlers.paste[0];
-            this.cmAndHandlersMap.set(cm, originalHandler);
+            let originalDropHandler = cm._handlers.drop[0];
+            let originalPasteHandler = cm._handlers.paste[0];
+            this.cmAndHandlersMap.set(cm, {drop: originalDropHandler, paste: originalPasteHandler});
         }
 
         return this.cmAndHandlersMap.get(cm);
