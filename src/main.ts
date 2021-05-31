@@ -1,4 +1,4 @@
-import {App, Editor, MarkdownView, Plugin, PluginSettingTab, Setting} from 'obsidian';
+import {App, Editor, MarkdownView, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import {ImageUploader, ImgurUploader} from "./imageUploader";
 
 interface ImgurPluginSettings {
@@ -50,7 +50,7 @@ export default class ImgurPlugin extends Plugin {
 
             cm._handlers.drop[0] = (_: any, e: DragEvent) => {
                 if (!this.settings.clientId) {
-                    console.warn("Please either set imgur client id or disable the plugin");
+                    ImgurPlugin.showClientIdNotice();
                     return originalHandlers.drop(_, e);
                 }
 
@@ -76,7 +76,7 @@ export default class ImgurPlugin extends Plugin {
 
             cm._handlers.paste[0] = (_: any, e: ClipboardEvent) => {
                 if (!this.settings.clientId) {
-                    console.warn("Please either set imgur client id or disable the plugin");
+                    ImgurPlugin.showClientIdNotice();
                     return originalHandlers.paste(_, e);
                 }
 
@@ -90,6 +90,11 @@ export default class ImgurPlugin extends Plugin {
                 }
             };
         });
+    }
+
+    private static showClientIdNotice() {
+        const fiveSecondsMillis = 5_000
+        new Notice("⚠️ Please either set imgur client_id or disable the imgur plugin", fiveSecondsMillis)
     }
 
     backupOriginalHandlers(cm: any) {
