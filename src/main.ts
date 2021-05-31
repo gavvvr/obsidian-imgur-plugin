@@ -1,5 +1,6 @@
 import {App, MarkdownView, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import {Editor} from "codemirror";
+import {ImageUploader, ImgurUploader} from "./imageUploader";
 
 interface ImgurPluginSettings {
     clientId: string;
@@ -12,6 +13,7 @@ const DEFAULT_SETTINGS: ImgurPluginSettings = {
 export default class ImgurPlugin extends Plugin {
     settings: ImgurPluginSettings;
     readonly cmAndHandlersMap = new Map;
+    private imgUploader: ImageUploader
 
     async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -36,6 +38,11 @@ export default class ImgurPlugin extends Plugin {
         await this.loadSettings();
         this.addSettingTab(new ImgurSettingTab(this.app, this));
         this.setupImgurHandlers();
+        this.setupImagesUploader();
+    }
+
+    setupImagesUploader() {
+        this.imgUploader = new ImgurUploader(this.settings.clientId);
     }
 
     setupImgurHandlers() {
@@ -100,18 +107,13 @@ export default class ImgurPlugin extends Plugin {
         let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
         this.insertTemporaryText(pasteId);
 
+        let imgUrl: string;
         try {
-            let resp = await this.uploadFile(file);
-            if (!resp.ok) {
-                let err = {response: resp, body: await resp.text()};
-                this.handleFailedUpload(pasteId, err)
-                return
-            }
-            let json = await resp.json();
-            this.embedMarkDownImage(pasteId, json)
+            imgUrl = await this.imgUploader.upload(file);
         } catch (e) {
             this.handleFailedUpload(pasteId, e)
         }
+        this.embedMarkDownImage(pasteId, imgUrl)
     }
 
     insertTemporaryText(pasteId: string) {
@@ -123,20 +125,7 @@ export default class ImgurPlugin extends Plugin {
         return `![Uploading file...${id}]()`
     }
 
-    uploadFile(file: File) {
-        const data = new FormData();
-        data.append('image', file);
-
-        return fetch('https://api.imgur.com/3/image.json', {
-            method: 'POST',
-            headers: new Headers({'Authorization': 'Client-ID ' + this.settings.clientId}),
-            body: data
-        });
-    }
-
-    embedMarkDownImage(pasteId: string, jsonResponse: any) {
-        let imageUrl = jsonResponse.data.link;
-
+    embedMarkDownImage(pasteId: string, imageUrl: string) {
         let progressText = ImgurPlugin.progressTextFor(pasteId);
         let markDownImage = `![](${imageUrl})`;
 
@@ -188,6 +177,7 @@ class ImgurSettingTab extends PluginSettingTab {
                 .setValue(this.plugin.settings.clientId)
                 .onChange(async (value) => {
                     this.plugin.settings.clientId = value;
+                    this.plugin.setupImagesUploader();
                     await this.plugin.saveSettings();
                 }));
     }
