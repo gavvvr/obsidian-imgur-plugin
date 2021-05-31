@@ -50,7 +50,7 @@ export default class ImgurPlugin extends Plugin {
         this.registerCodeMirror((cm: any) => {
             let originalHandlers = this.backupOriginalHandlers(cm);
 
-            cm._handlers.drop[0] = (_: any, e: DragEvent) => {
+            cm._handlers.drop[0] = async (_: any, e: DragEvent) => {
                 if (!this.settings.clientId) {
                     ImgurPlugin.showClientIdNotice();
                     return originalHandlers.drop(_, e);
@@ -70,10 +70,39 @@ export default class ImgurPlugin extends Plugin {
                     }
                 }
 
-                let images = e.dataTransfer.files
-                for (let i = 0; i < images.length; i++) {
-                    this.uploadFileAndEmbedImgurImage(images[i]).catch(console.error);
+                // Adding newline to avoid messing images pasted via default handler
+                // with any text added by the plugin
+                this.getEditor().replaceSelection("\n");
+
+                let promises: Promise<void>[] = []
+                let failedUploads: File[] = []
+                for (let i = 0; i < files.length; i++) {
+                    const image = files[i];
+                    let uploadPromise = this.uploadFileAndEmbedImgurImage(image)
+                        .catch(e => { console.log(e); failedUploads.push(image) })
+                    promises.push(uploadPromise)
                 }
+
+                for (let promise of promises) {
+                    try {
+                        await promise
+                    } catch (e) {
+                        console.log(e)
+                    }
+                }
+
+                if (failedUploads.length === 0) return
+
+                const dataTransfer = new DataTransfer();
+                for (const fileFailedToUpload of failedUploads) {
+                    dataTransfer.items.add(fileFailedToUpload)
+                }
+                const newEvt = new DragEvent('drop', {
+                    dataTransfer: dataTransfer,
+                    clientX: e.clientX,
+                    clientY: e.clientY,
+                })
+                originalHandlers.drop(_, newEvt)
             };
 
             cm._handlers.paste[0] = (_: any, e: ClipboardEvent) => {
@@ -88,7 +117,14 @@ export default class ImgurPlugin extends Plugin {
                 }
 
                 for (let i = 0; i < files.length; i++) {
-                    this.uploadFileAndEmbedImgurImage(files[i]).catch(console.error);
+                    this.uploadFileAndEmbedImgurImage(files[i])
+                        .catch(err => {
+                            console.error(err)
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(files[i])
+                            const newEvt = new ClipboardEvent('paste', {clipboardData: dataTransfer})
+                            originalHandlers.paste(_, newEvt)
+                        });
                 }
             };
         });
@@ -118,6 +154,7 @@ export default class ImgurPlugin extends Plugin {
             imgUrl = await this.imgUploader.upload(file);
         } catch (e) {
             this.handleFailedUpload(pasteId, e)
+            throw e
         }
         this.embedMarkDownImage(pasteId, imgUrl)
     }
