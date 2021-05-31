@@ -1,5 +1,4 @@
-import {App, MarkdownView, Plugin, PluginSettingTab, Setting} from 'obsidian';
-import {Editor} from "codemirror";
+import {App, Editor, MarkdownView, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import {ImageUploader, ImgurUploader} from "./imageUploader";
 
 interface ImgurPluginSettings {
@@ -152,8 +151,8 @@ export default class ImgurPlugin extends Plugin {
     }
 
     getEditor(): Editor {
-        let view = this.app.workspace.activeLeaf.view as MarkdownView;
-        return view.sourceMode.cmEditor;
+        let mdView = this.app.workspace.activeLeaf.view as MarkdownView;
+        return mdView.editor;
     }
 }
 
