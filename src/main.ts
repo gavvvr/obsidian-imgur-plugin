@@ -10,6 +10,8 @@ const DEFAULT_SETTINGS: ImgurPluginSettings = {
 }
 
 export default class ImgurPlugin extends Plugin {
+    private static readonly FAILED_UPLOAD_COMMENT = "<!--⚠️Imgur upload failed, check dev console-->";
+
     settings: ImgurPluginSettings;
     readonly cmAndHandlersMap = new Map;
     private imgUploader: ImageUploader
@@ -139,7 +141,7 @@ export default class ImgurPlugin extends Plugin {
     handleFailedUpload(pasteId: string, reason: any) {
         console.error("Failed imgur request: ", reason);
         let progressText = ImgurPlugin.progressTextFor(pasteId);
-        ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, "⚠️Imgur upload failed, check dev console");
+        ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, ImgurPlugin.FAILED_UPLOAD_COMMENT);
     };
 
     static replaceFirstOccurrence(editor: Editor, target: string, replacement: string) {
