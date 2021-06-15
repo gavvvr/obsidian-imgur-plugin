@@ -48,7 +48,7 @@ export default class ImgurPlugin extends Plugin {
 
     setupImgurHandlers() {
         this.registerCodeMirror((cm: any) => {
-            let originalHandlers = this.backupOriginalHandlers(cm);
+            const originalHandlers = this.backupOriginalHandlers(cm);
 
             cm._handlers.drop[0] = async (_: any, e: DragEvent) => {
                 if (!this.settings.clientId) {
@@ -60,7 +60,7 @@ export default class ImgurPlugin extends Plugin {
                     return originalHandlers.drop(_, e);
                 }
 
-                let files = e.dataTransfer.files;
+                const files = e.dataTransfer.files;
                 for (let i = 0; i < files.length; i++) {
                     if (!files[i].type.startsWith("image")) {
                         // using original handlers if at least one of drag-and drop files is not an image
@@ -74,16 +74,16 @@ export default class ImgurPlugin extends Plugin {
                 // with any text added by the plugin
                 this.getEditor().replaceSelection("\n");
 
-                let promises: Promise<void>[] = []
-                let failedUploads: File[] = []
+                const promises: Promise<void>[] = []
+                const failedUploads: File[] = []
                 for (let i = 0; i < files.length; i++) {
                     const image = files[i];
-                    let uploadPromise = this.uploadFileAndEmbedImgurImage(image)
+                    const uploadPromise = this.uploadFileAndEmbedImgurImage(image)
                         .catch(e => { console.log(e); failedUploads.push(image) })
                     promises.push(uploadPromise)
                 }
 
-                for (let promise of promises) {
+                for (const promise of promises) {
                     try {
                         await promise
                     } catch (e) {
@@ -111,7 +111,7 @@ export default class ImgurPlugin extends Plugin {
                     return originalHandlers.paste(_, e);
                 }
 
-                let files = e.clipboardData.files;
+                const files = e.clipboardData.files;
                 if (files.length === 0 || !files[0].type.startsWith("image")) {
                     return originalHandlers.paste(_, e);
                 }
@@ -137,8 +137,8 @@ export default class ImgurPlugin extends Plugin {
 
     backupOriginalHandlers(cm: any) {
         if (!this.cmAndHandlersMap.has(cm)) {
-            let originalDropHandler = cm._handlers.drop[0];
-            let originalPasteHandler = cm._handlers.paste[0];
+            const originalDropHandler = cm._handlers.drop[0];
+            const originalPasteHandler = cm._handlers.paste[0];
             this.cmAndHandlersMap.set(cm, {drop: originalDropHandler, paste: originalPasteHandler});
         }
 
@@ -146,7 +146,7 @@ export default class ImgurPlugin extends Plugin {
     }
 
     async uploadFileAndEmbedImgurImage(file: File) {
-        let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
+        const pasteId = (Math.random() + 1).toString(36).substr(2, 5);
         this.insertTemporaryText(pasteId);
 
         let imgUrl: string;
@@ -160,7 +160,7 @@ export default class ImgurPlugin extends Plugin {
     }
 
     insertTemporaryText(pasteId: string) {
-        let progressText = ImgurPlugin.progressTextFor(pasteId);
+        const progressText = ImgurPlugin.progressTextFor(pasteId);
         this.getEditor().replaceSelection(progressText + "\n");
     }
 
@@ -169,25 +169,25 @@ export default class ImgurPlugin extends Plugin {
     }
 
     embedMarkDownImage(pasteId: string, imageUrl: string) {
-        let progressText = ImgurPlugin.progressTextFor(pasteId);
-        let markDownImage = `![](${imageUrl})`;
+        const progressText = ImgurPlugin.progressTextFor(pasteId);
+        const markDownImage = `![](${imageUrl})`;
 
         ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, markDownImage);
-    };
+    }
 
     handleFailedUpload(pasteId: string, reason: any) {
         console.error("Failed imgur request: ", reason);
-        let progressText = ImgurPlugin.progressTextFor(pasteId);
+        const progressText = ImgurPlugin.progressTextFor(pasteId);
         ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, ImgurPlugin.FAILED_UPLOAD_COMMENT);
-    };
+    }
 
     static replaceFirstOccurrence(editor: Editor, target: string, replacement: string) {
-        let lines = editor.getValue().split('\n');
+        const lines = editor.getValue().split('\n');
         for (let i = 0; i < lines.length; i++) {
-            let ch = lines[i].indexOf(target);
+            const ch = lines[i].indexOf(target);
             if (ch != -1) {
-                let from = {line: i, ch: ch};
-                let to = {line: i, ch: ch + target.length};
+                const from = {line: i, ch: ch};
+                const to = {line: i, ch: ch + target.length};
                 editor.replaceRange(replacement, from, to);
                 break;
             }
@@ -195,7 +195,7 @@ export default class ImgurPlugin extends Plugin {
     }
 
     getEditor(): Editor {
-        let mdView = this.app.workspace.activeLeaf.view as MarkdownView;
+        const mdView = this.app.workspace.activeLeaf.view as MarkdownView;
         return mdView.editor;
     }
 }
@@ -209,7 +209,7 @@ class ImgurSettingTab extends PluginSettingTab {
     }
 
     display(): void {
-        let {containerEl} = this;
+        const {containerEl} = this;
 
         containerEl.empty();
         containerEl.createEl('h2', {text: 'imgur.com plugin settings'});
@@ -228,8 +228,8 @@ class ImgurSettingTab extends PluginSettingTab {
     clientIdSettingDescription() {
         const registerClientUrl = "https://api.imgur.com/oauth2/addclient";
 
-        let fragment = document.createDocumentFragment();
-        let a = document.createElement('a');
+        const fragment = document.createDocumentFragment();
+        const a = document.createElement('a');
         a.textContent = registerClientUrl
         a.setAttribute("href", registerClientUrl);
         fragment.append("Obtained from ");
