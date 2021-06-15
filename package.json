@@ -21,8 +21,12 @@
     "@typescript-eslint/eslint-plugin": "^4.26.1",
     "@typescript-eslint/parser": "^4.26.1",
     "eslint": "^7.28.0",
+    "eslint-config-airbnb-typescript": "^12.3.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.23.4",
     "obsidian": "^0.12.0",
     "obsidian-plugin-cli": "^0.6",
+    "prettier": "2.3.1",
     "rollup": "^2.32.1",
     "tslib": "^2.2.0",
     "typescript": "^4.2.4"
