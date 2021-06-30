@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
-    "build": "rollup --config rollup.config.js --environment BUILD:production"
+    "build": "rollup --config rollup.config.js --environment BUILD:production",
+    "prepare": "husky install"
   },
   "keywords": [
     "obsidian.md",
@@ -24,11 +25,17 @@
     "eslint-config-airbnb-typescript": "^12.3.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.23.4",
+    "husky": "^6.0.0",
+    "lint-staged": "^11.0.0",
     "obsidian": "^0.12.0",
     "obsidian-plugin-cli": "^0.6",
     "prettier": "2.3.1",
     "rollup": "^2.32.1",
     "tslib": "^2.2.0",
     "typescript": "^4.2.4"
+  },
+  "lint-staged": {
+    "*.{ts,js,css,md}": "prettier --write",
+    "*.js": "eslint --cache --fix"
   }
 }
