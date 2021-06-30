@@ -1,239 +1,266 @@
-import {App, Editor, MarkdownView, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
-import {ImageUploader, ImgurUploader} from "./imageUploader";
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-underscore-dangle */
+import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
+import * as CodeMirror from "codemirror";
+import { ImageUploader, ImgurUploader } from "./imageUploader";
+// eslint-disable-next-line import/no-cycle
+import ImgurSettingTab from "./ImgurSettingTab";
 
 interface ImgurPluginSettings {
-    clientId: string;
+  clientId: string;
 }
+
+type Handlers = {
+  drop: (cm: CodeMirror.Editor, event: DragEvent) => void;
+  paste: (cm: CodeMirror.Editor, event: ClipboardEvent) => void;
+};
 
 const DEFAULT_SETTINGS: ImgurPluginSettings = {
-    clientId: null
-}
+  clientId: null,
+};
 
 export default class ImgurPlugin extends Plugin {
-    private static readonly FAILED_UPLOAD_COMMENT = "<!--⚠️Imgur upload failed, check dev console-->";
+  private static readonly FAILED_UPLOAD_COMMENT =
+    "<!--⚠️Imgur upload failed, check dev console-->";
 
-    settings: ImgurPluginSettings;
-    readonly cmAndHandlersMap = new Map;
-    private imgUploader: ImageUploader
+  settings: ImgurPluginSettings;
 
-    async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    }
+  readonly cmAndHandlersMap = new Map<CodeMirror.Editor, Handlers>();
 
-    async saveSettings() {
-        await this.saveData(this.settings);
-    }
+  private imgUploader: ImageUploader;
 
-    onunload() {
-        this.restoreOriginalHandlers();
-    }
+  private async loadSettings() {
+    this.settings = {
+      ...DEFAULT_SETTINGS,
+      ...((await this.loadData()) as ImgurPluginSettings),
+    };
+  }
 
-    restoreOriginalHandlers() {
-        this.cmAndHandlersMap.forEach((originalHandlers, cm) => {
-            cm._handlers.drop[0] = originalHandlers.drop;
-            cm._handlers.paste[0] = originalHandlers.paste;
-        })
-    }
+  async saveSettings(): Promise<void> {
+    await this.saveData(this.settings);
+  }
 
-    async onload() {
-        await this.loadSettings();
-        this.addSettingTab(new ImgurSettingTab(this.app, this));
-        this.setupImgurHandlers();
-        this.setupImagesUploader();
-    }
+  onunload(): void {
+    this.restoreOriginalHandlers();
+  }
 
-    setupImagesUploader() {
-        this.imgUploader = new ImgurUploader(this.settings.clientId);
-    }
+  private restoreOriginalHandlers() {
+    this.cmAndHandlersMap.forEach((originalHandlers, cm) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (cm as any)._handlers.drop[0] = originalHandlers.drop;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (cm as any)._handlers.paste[0] = originalHandlers.paste;
+    });
+  }
 
-    setupImgurHandlers() {
-        this.registerCodeMirror((cm: any) => {
-            const originalHandlers = this.backupOriginalHandlers(cm);
+  async onload(): Promise<void> {
+    await this.loadSettings();
+    this.addSettingTab(new ImgurSettingTab(this.app, this));
+    this.setupImgurHandlers();
+    this.setupImagesUploader();
+  }
 
-            cm._handlers.drop[0] = async (_: any, e: DragEvent) => {
-                if (!this.settings.clientId) {
-                    ImgurPlugin.showClientIdNotice();
-                    return originalHandlers.drop(_, e);
-                }
+  setupImagesUploader(): void {
+    this.imgUploader = new ImgurUploader(this.settings.clientId);
+  }
 
-                if (e.dataTransfer.types.length !== 1 || e.dataTransfer.types[0] !== "Files") {
-                    return originalHandlers.drop(_, e);
-                }
+  private setupImgurHandlers() {
+    this.registerCodeMirror((cm: CodeMirror.Editor) => {
+      const originalHandlers = this.backupOriginalHandlers(cm);
 
-                const files = e.dataTransfer.files;
-                for (let i = 0; i < files.length; i++) {
-                    if (!files[i].type.startsWith("image")) {
-                        // using original handlers if at least one of drag-and drop files is not an image
-                        // It is not possible to call DragEvent.dataTransfer#clearData(images) here
-                        // to split images and non-images processing
-                        return originalHandlers.drop(_, e);
-                    }
-                }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (cm as any)._handlers.drop[0] = async (
+        _: CodeMirror.Editor,
+        event: DragEvent
+      ) => {
+        console.log(_);
 
-                // Adding newline to avoid messing images pasted via default handler
-                // with any text added by the plugin
-                this.getEditor().replaceSelection("\n");
-
-                const promises: Promise<void>[] = []
-                const failedUploads: File[] = []
-                for (let i = 0; i < files.length; i++) {
-                    const image = files[i];
-                    const uploadPromise = this.uploadFileAndEmbedImgurImage(image)
-                        .catch(e => { console.log(e); failedUploads.push(image) })
-                    promises.push(uploadPromise)
-                }
-
-                for (const promise of promises) {
-                    try {
-                        await promise
-                    } catch (e) {
-                        console.log(e)
-                    }
-                }
-
-                if (failedUploads.length === 0) return
-
-                const dataTransfer = new DataTransfer();
-                for (const fileFailedToUpload of failedUploads) {
-                    dataTransfer.items.add(fileFailedToUpload)
-                }
-                const newEvt = new DragEvent('drop', {
-                    dataTransfer: dataTransfer,
-                    clientX: e.clientX,
-                    clientY: e.clientY,
-                })
-                originalHandlers.drop(_, newEvt)
-            };
-
-            cm._handlers.paste[0] = (_: any, e: ClipboardEvent) => {
-                if (!this.settings.clientId) {
-                    ImgurPlugin.showClientIdNotice();
-                    return originalHandlers.paste(_, e);
-                }
-
-                const files = e.clipboardData.files;
-                if (files.length === 0 || !files[0].type.startsWith("image")) {
-                    return originalHandlers.paste(_, e);
-                }
-
-                for (let i = 0; i < files.length; i++) {
-                    this.uploadFileAndEmbedImgurImage(files[i])
-                        .catch(err => {
-                            console.error(err)
-                            const dataTransfer = new DataTransfer();
-                            dataTransfer.items.add(files[i])
-                            const newEvt = new ClipboardEvent('paste', {clipboardData: dataTransfer})
-                            originalHandlers.paste(_, newEvt)
-                        });
-                }
-            };
-        });
-    }
-
-    private static showClientIdNotice() {
-        const fiveSecondsMillis = 5_000
-        new Notice("⚠️ Please either set imgur client_id or disable the imgur plugin", fiveSecondsMillis)
-    }
-
-    backupOriginalHandlers(cm: any) {
-        if (!this.cmAndHandlersMap.has(cm)) {
-            const originalDropHandler = cm._handlers.drop[0];
-            const originalPasteHandler = cm._handlers.paste[0];
-            this.cmAndHandlersMap.set(cm, {drop: originalDropHandler, paste: originalPasteHandler});
+        if (!this.settings.clientId) {
+          ImgurPlugin.showClientIdNotice();
+          originalHandlers.drop(_, event);
+          return;
         }
 
-        return this.cmAndHandlersMap.get(cm);
-    }
-
-    async uploadFileAndEmbedImgurImage(file: File) {
-        const pasteId = (Math.random() + 1).toString(36).substr(2, 5);
-        this.insertTemporaryText(pasteId);
-
-        let imgUrl: string;
-        try {
-            imgUrl = await this.imgUploader.upload(file);
-        } catch (e) {
-            this.handleFailedUpload(pasteId, e)
-            throw e
+        if (
+          event.dataTransfer.types.length !== 1 ||
+          event.dataTransfer.types[0] !== "Files"
+        ) {
+          originalHandlers.drop(_, event);
+          return;
         }
-        this.embedMarkDownImage(pasteId, imgUrl)
-    }
 
-    insertTemporaryText(pasteId: string) {
-        const progressText = ImgurPlugin.progressTextFor(pasteId);
-        this.getEditor().replaceSelection(progressText + "\n");
-    }
+        const { files } = event.dataTransfer;
+        for (let i = 0; i < files.length; i += 1) {
+          if (!files[i].type.startsWith("image")) {
+            // using original handlers if at least one of drag-and drop files is not an image
+            // It is not possible to call DragEvent.dataTransfer#clearData(images) here
+            // to split images and non-images processing
+            originalHandlers.drop(_, event);
+            return;
+          }
+        }
 
-    private static progressTextFor(id: string) {
-        return `![Uploading file...${id}]()`
-    }
+        // Adding newline to avoid messing images pasted via default handler
+        // with any text added by the plugin
+        this.getEditor().replaceSelection("\n");
 
-    embedMarkDownImage(pasteId: string, imageUrl: string) {
-        const progressText = ImgurPlugin.progressTextFor(pasteId);
-        const markDownImage = `![](${imageUrl})`;
-
-        ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, markDownImage);
-    }
-
-    handleFailedUpload(pasteId: string, reason: any) {
-        console.error("Failed imgur request: ", reason);
-        const progressText = ImgurPlugin.progressTextFor(pasteId);
-        ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, ImgurPlugin.FAILED_UPLOAD_COMMENT);
-    }
-
-    static replaceFirstOccurrence(editor: Editor, target: string, replacement: string) {
-        const lines = editor.getValue().split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            const ch = lines[i].indexOf(target);
-            if (ch != -1) {
-                const from = {line: i, ch: ch};
-                const to = {line: i, ch: ch + target.length};
-                editor.replaceRange(replacement, from, to);
-                break;
+        const promises: Promise<void>[] = [];
+        const filesFailedToUpload: File[] = [];
+        for (let i = 0; i < files.length; i += 1) {
+          const image = files[i];
+          const uploadPromise = this.uploadFileAndEmbedImgurImage(image).catch(
+            (e) => {
+              console.error(e);
+              filesFailedToUpload.push(image);
             }
+          );
+          promises.push(uploadPromise);
         }
+
+        await Promise.all(promises);
+
+        if (filesFailedToUpload.length === 0) return;
+
+        const newEvt = ImgurPlugin.composeNewDragEvent(
+          event,
+          filesFailedToUpload
+        );
+        originalHandlers.drop(_, newEvt);
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (cm as any)._handlers.paste[0] = (
+        _: CodeMirror.Editor,
+        e: ClipboardEvent
+      ) => {
+        if (!this.settings.clientId) {
+          ImgurPlugin.showClientIdNotice();
+          originalHandlers.paste(_, e);
+          return;
+        }
+
+        const { files } = e.clipboardData;
+        if (files.length === 0 || !files[0].type.startsWith("image")) {
+          originalHandlers.paste(_, e);
+          return;
+        }
+
+        for (let i = 0; i < files.length; i += 1) {
+          this.uploadFileAndEmbedImgurImage(files[i]).catch((err) => {
+            console.error(err);
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(files[i]);
+            const newEvt = new ClipboardEvent("paste", {
+              clipboardData: dataTransfer,
+            });
+            originalHandlers.paste(_, newEvt);
+          });
+        }
+      };
+    });
+  }
+
+  private static composeNewDragEvent(
+    originalEvent: DragEvent,
+    failedUploads: File[]
+  ) {
+    const dataTransfer = failedUploads.reduce((dt, fileFailedToUpload) => {
+      dt.items.add(fileFailedToUpload);
+      return dt;
+    }, new DataTransfer());
+
+    return new DragEvent("drop", {
+      dataTransfer,
+      clientX: originalEvent.clientX,
+      clientY: originalEvent.clientY,
+    });
+  }
+
+  private static showClientIdNotice() {
+    const fiveSecondsMillis = 5_000;
+    // eslint-disable-next-line no-new
+    new Notice(
+      "⚠️ Please either set imgur client_id or disable the imgur plugin",
+      fiveSecondsMillis
+    );
+  }
+
+  private backupOriginalHandlers(cm: CodeMirror.Editor) {
+    if (!this.cmAndHandlersMap.has(cm)) {
+      this.cmAndHandlersMap.set(cm, {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+        drop: (cm as any)._handlers.drop[0],
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+        paste: (cm as any)._handlers.paste[0],
+      });
     }
 
-    getEditor(): Editor {
-        const mdView = this.app.workspace.activeLeaf.view as MarkdownView;
-        return mdView.editor;
+    return this.cmAndHandlersMap.get(cm);
+  }
+
+  private async uploadFileAndEmbedImgurImage(file: File) {
+    const pasteId = (Math.random() + 1).toString(36).substr(2, 5);
+    this.insertTemporaryText(pasteId);
+
+    let imgUrl: string;
+    try {
+      imgUrl = await this.imgUploader.upload(file);
+    } catch (e) {
+      this.handleFailedUpload(pasteId, e);
+      throw e;
     }
-}
+    this.embedMarkDownImage(pasteId, imgUrl);
+  }
 
-class ImgurSettingTab extends PluginSettingTab {
-    plugin: ImgurPlugin;
+  private insertTemporaryText(pasteId: string) {
+    const progressText = ImgurPlugin.progressTextFor(pasteId);
+    this.getEditor().replaceSelection(`${progressText}\n`);
+  }
 
-    constructor(app: App, plugin: ImgurPlugin) {
-        super(app, plugin);
-        this.plugin = plugin;
+  private static progressTextFor(id: string) {
+    return `![Uploading file...${id}]()`;
+  }
+
+  private embedMarkDownImage(pasteId: string, imageUrl: string) {
+    const progressText = ImgurPlugin.progressTextFor(pasteId);
+    const markDownImage = `![](${imageUrl})`;
+
+    ImgurPlugin.replaceFirstOccurrence(
+      this.getEditor(),
+      progressText,
+      markDownImage
+    );
+  }
+
+  private handleFailedUpload(pasteId: string, e: Error) {
+    console.error("Failed imgur request: ", e.stack);
+    const progressText = ImgurPlugin.progressTextFor(pasteId);
+    ImgurPlugin.replaceFirstOccurrence(
+      this.getEditor(),
+      progressText,
+      ImgurPlugin.FAILED_UPLOAD_COMMENT
+    );
+  }
+
+  private static replaceFirstOccurrence(
+    editor: Editor,
+    target: string,
+    replacement: string
+  ) {
+    const lines = editor.getValue().split("\n");
+    for (let i = 0; i < lines.length; i += 1) {
+      const ch = lines[i].indexOf(target);
+      if (ch !== -1) {
+        const from = { line: i, ch };
+        const to = { line: i, ch: ch + target.length };
+        editor.replaceRange(replacement, from, to);
+        break;
+      }
     }
+  }
 
-    display(): void {
-        const {containerEl} = this;
-
-        containerEl.empty();
-        containerEl.createEl('h2', {text: 'imgur.com plugin settings'});
-        new Setting(containerEl)
-            .setName('Client ID')
-            .setDesc(this.clientIdSettingDescription())
-            .addText(text => text.setPlaceholder('Enter your client_id')
-                .setValue(this.plugin.settings.clientId)
-                .onChange(async (value) => {
-                    this.plugin.settings.clientId = value;
-                    this.plugin.setupImagesUploader();
-                    await this.plugin.saveSettings();
-                }));
-    }
-
-    clientIdSettingDescription() {
-        const registerClientUrl = "https://api.imgur.com/oauth2/addclient";
-
-        const fragment = document.createDocumentFragment();
-        const a = document.createElement('a');
-        a.textContent = registerClientUrl
-        a.setAttribute("href", registerClientUrl);
-        fragment.append("Obtained from ");
-        fragment.append(a);
-        return fragment;
-    }
+  private getEditor(): Editor {
+    const mdView = this.app.workspace.activeLeaf.view as MarkdownView;
+    return mdView.editor;
+  }
 }

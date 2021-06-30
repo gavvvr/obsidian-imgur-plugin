@@ -11,4 +11,8 @@ module.exports = {
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "prettier",
   ],
+  rules: {
+    "no-console": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+  },
 };
