@@ -73,8 +73,6 @@ export default class ImgurPlugin extends Plugin {
         _: CodeMirror.Editor,
         event: DragEvent
       ) => {
-        console.log(_);
-
         if (!this.settings.clientId) {
           ImgurPlugin.showClientIdNotice();
           originalHandlers.drop(_, event);
