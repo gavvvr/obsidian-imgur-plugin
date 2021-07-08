@@ -108,6 +108,7 @@ export default class ImgurPlugin extends Plugin {
           const image = files[i];
           const uploadPromise = this.uploadFileAndEmbedImgurImage(image).catch(
             (e) => {
+              // eslint-disable-next-line no-console
               console.error(e);
               filesFailedToUpload.push(image);
             }
@@ -145,6 +146,7 @@ export default class ImgurPlugin extends Plugin {
 
         for (let i = 0; i < files.length; i += 1) {
           this.uploadFileAndEmbedImgurImage(files[i]).catch((err) => {
+            // eslint-disable-next-line no-console
             console.error(err);
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(files[i]);
@@ -231,6 +233,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private handleFailedUpload(pasteId: string, e: Error) {
+    // eslint-disable-next-line no-console
     console.error("Failed imgur request: ", e.stack);
     const progressText = ImgurPlugin.progressTextFor(pasteId);
     ImgurPlugin.replaceFirstOccurrence(
