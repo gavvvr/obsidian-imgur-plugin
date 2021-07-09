@@ -4,7 +4,7 @@ import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
 import * as CodeMirror from "codemirror";
 import { ImageUploader } from "./uploader/imageUploader";
 // eslint-disable-next-line import/no-cycle
-import ImgurSettingTab from "./ui/ImgurSettingTab";
+import ImgurPluginSettingsTab from "./ui/ImgurPluginSettingsTab";
 import ApiError from "./uploader/ApiError";
 import ImgurUploader from "./uploader/ImgurUploader";
 
@@ -57,7 +57,7 @@ export default class ImgurPlugin extends Plugin {
 
   async onload(): Promise<void> {
     await this.loadSettings();
-    this.addSettingTab(new ImgurSettingTab(this.app, this));
+    this.addSettingTab(new ImgurPluginSettingsTab(this.app, this));
     this.setupImgurHandlers();
     this.setupImagesUploader();
   }

@@ -2,7 +2,7 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 // eslint-disable-next-line import/no-cycle
 import ImgurPlugin from "../ImgurPlugin";
 
-export default class ImgurSettingTab extends PluginSettingTab {
+export default class ImgurPluginSettingsTab extends PluginSettingTab {
   plugin: ImgurPlugin;
 
   constructor(app: App, plugin: ImgurPlugin) {
@@ -17,7 +17,7 @@ export default class ImgurSettingTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: "imgur.com plugin settings" });
     new Setting(containerEl)
       .setName("Client ID")
-      .setDesc(ImgurSettingTab.clientIdSettingDescription())
+      .setDesc(ImgurPluginSettingsTab.clientIdSettingDescription())
       .addText((text) =>
         text
           .setPlaceholder("Enter your client_id")
