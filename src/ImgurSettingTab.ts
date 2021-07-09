@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 // eslint-disable-next-line import/no-cycle
-import ImgurPlugin from "./main";
+import ImgurPlugin from "./ImgurPlugin";
 
 export default class ImgurSettingTab extends PluginSettingTab {
   plugin: ImgurPlugin;
