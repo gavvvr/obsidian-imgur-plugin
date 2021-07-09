@@ -1,3 +1,5 @@
+import ApiError from "./ApiError";
+
 export interface ImageUploader {
   upload(image: File): Promise<string>;
 }
@@ -22,11 +24,24 @@ export class ImgurUploader implements ImageUploader {
     });
 
     if (!resp.ok) {
+      if (resp.headers.get("Content-Type") === "application/json") {
+        throw new ApiError(((await resp.json()) as ImgurErrorData).data.error);
+      }
       throw new Error(await resp.text());
     }
     return ((await resp.json()) as ImgurPostData).data.link;
   }
 }
+
+type ImgurErrorData = {
+  success: boolean;
+  status: number;
+  data: {
+    request: string;
+    method: string;
+    error: string;
+  };
+};
 
 type ImgurPostData = {
   success: boolean;
