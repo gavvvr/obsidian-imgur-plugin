@@ -5,6 +5,7 @@ import * as CodeMirror from "codemirror";
 import { ImageUploader, ImgurUploader } from "./imageUploader";
 // eslint-disable-next-line import/no-cycle
 import ImgurSettingTab from "./ImgurSettingTab";
+import ApiError from "./ApiError";
 
 interface ImgurPluginSettings {
   clientId: string;
@@ -21,7 +22,7 @@ const DEFAULT_SETTINGS: ImgurPluginSettings = {
 
 export default class ImgurPlugin extends Plugin {
   private static readonly FAILED_UPLOAD_COMMENT =
-    "<!--⚠️Imgur upload failed, check dev console-->";
+    "⚠️Imgur upload failed, check dev console";
 
   settings: ImgurPluginSettings;
 
@@ -107,9 +108,7 @@ export default class ImgurPlugin extends Plugin {
         for (let i = 0; i < files.length; i += 1) {
           const image = files[i];
           const uploadPromise = this.uploadFileAndEmbedImgurImage(image).catch(
-            (e) => {
-              // eslint-disable-next-line no-console
-              console.error(e);
+            () => {
               filesFailedToUpload.push(image);
             }
           );
@@ -145,9 +144,7 @@ export default class ImgurPlugin extends Plugin {
         }
 
         for (let i = 0; i < files.length; i += 1) {
-          this.uploadFileAndEmbedImgurImage(files[i]).catch((err) => {
-            // eslint-disable-next-line no-console
-            console.error(err);
+          this.uploadFileAndEmbedImgurImage(files[i]).catch(() => {
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(files[i]);
             const newEvt = new ClipboardEvent("paste", {
@@ -206,7 +203,16 @@ export default class ImgurPlugin extends Plugin {
     try {
       imgUrl = await this.imgUploader.upload(file);
     } catch (e) {
-      this.handleFailedUpload(pasteId, e);
+      if (e instanceof ApiError) {
+        this.handleFailedUpload(
+          pasteId,
+          `Upload failed, remote server returned an error: ${e.message}`
+        );
+      } else {
+        // eslint-disable-next-line no-console
+        console.error("Failed imgur request: ", e);
+        this.handleFailedUpload(pasteId, ImgurPlugin.FAILED_UPLOAD_COMMENT);
+      }
       throw e;
     }
     this.embedMarkDownImage(pasteId, imgUrl);
@@ -232,14 +238,12 @@ export default class ImgurPlugin extends Plugin {
     );
   }
 
-  private handleFailedUpload(pasteId: string, e: Error) {
-    // eslint-disable-next-line no-console
-    console.error("Failed imgur request: ", e.stack);
+  private handleFailedUpload(pasteId: string, message: string) {
     const progressText = ImgurPlugin.progressTextFor(pasteId);
     ImgurPlugin.replaceFirstOccurrence(
       this.getEditor(),
       progressText,
-      ImgurPlugin.FAILED_UPLOAD_COMMENT
+      `<!--${message}-->`
     );
   }
 
