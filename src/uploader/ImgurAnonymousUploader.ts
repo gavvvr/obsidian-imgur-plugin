@@ -1,7 +1,7 @@
 import ApiError from "./ApiError";
 import { ImageUploader } from "./imageUploader";
 
-export default class ImgurUploader implements ImageUploader {
+export default class ImgurAnonymousUploader implements ImageUploader {
   private readonly clientId!: string;
 
   private static readonly IMGUR_API = "https://api.imgur.com/3/";
@@ -14,7 +14,7 @@ export default class ImgurUploader implements ImageUploader {
     const requestData = new FormData();
     requestData.append("image", image);
 
-    const resp = await fetch(`${ImgurUploader.IMGUR_API}image.json`, {
+    const resp = await fetch(`${ImgurAnonymousUploader.IMGUR_API}image.json`, {
       method: "POST",
       headers: new Headers({ Authorization: `Client-ID ${this.clientId}` }),
       body: requestData,

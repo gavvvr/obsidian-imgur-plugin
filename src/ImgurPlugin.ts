@@ -6,7 +6,7 @@ import { ImageUploader } from "./uploader/imageUploader";
 // eslint-disable-next-line import/no-cycle
 import ImgurPluginSettingsTab from "./ui/ImgurPluginSettingsTab";
 import ApiError from "./uploader/ApiError";
-import ImgurUploader from "./uploader/ImgurUploader";
+import ImgurAnonymousUploader from "./uploader/ImgurAnonymousUploader";
 
 interface ImgurPluginSettings {
   clientId: string;
@@ -63,7 +63,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   setupImagesUploader(): void {
-    this.imgUploader = new ImgurUploader(this.settings.clientId);
+    this.imgUploader = new ImgurAnonymousUploader(this.settings.clientId);
   }
 
   private setupImgurHandlers() {
