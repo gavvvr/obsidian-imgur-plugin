@@ -1,10 +1,7 @@
 import ApiError from "./ApiError";
+import { ImageUploader } from "./imageUploader";
 
-export interface ImageUploader {
-  upload(image: File): Promise<string>;
-}
-
-export class ImgurUploader implements ImageUploader {
+export default class ImgurUploader implements ImageUploader {
   private readonly clientId!: string;
 
   private static readonly IMGUR_API = "https://api.imgur.com/3/";
@@ -42,7 +39,6 @@ type ImgurErrorData = {
     error: string;
   };
 };
-
 type ImgurPostData = {
   success: boolean;
   status: number;

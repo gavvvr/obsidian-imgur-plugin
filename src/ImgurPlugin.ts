@@ -2,10 +2,11 @@
 /* eslint-disable no-underscore-dangle */
 import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
 import * as CodeMirror from "codemirror";
-import { ImageUploader, ImgurUploader } from "./imageUploader";
+import { ImageUploader } from "./uploader/imageUploader";
 // eslint-disable-next-line import/no-cycle
-import ImgurSettingTab from "./ImgurSettingTab";
-import ApiError from "./ApiError";
+import ImgurSettingTab from "./ui/ImgurSettingTab";
+import ApiError from "./uploader/ApiError";
+import ImgurUploader from "./uploader/ImgurUploader";
 
 interface ImgurPluginSettings {
   clientId: string;
