@@ -27,12 +27,13 @@ you will only need to share a single file.
 If you are uncertain if this solution is for you, you can check out the [FAQ](#faq) section
 and/or a video created by [@santiyounger][santiyounger] discussing pros and cons of this approach
 
-[![](https://img.youtube.com/vi/-a1vJVy20cQ/0.jpg)](https://www.youtube.com/watch?v=-a1vJVy20cQ)
+[![Santi Younger - Use Images Like A Pro](https://img.youtube.com/vi/-a1vJVy20cQ/0.jpg)](https://www.youtube.com/watch?v=-a1vJVy20cQ)
 
 [santiyounger]: https://github.com/santiyounger
 
 ## Features
 
+- Upload images anonymously or to your Imgur account
 - Upload images by either pasting from the clipboard or by dragging them from the file system
 - Animated gifs upload support on drag-and-drop
 
@@ -42,39 +43,51 @@ Install the plugin via the [Community Plugins][installation-instructions] tab wi
 
 ## Getting started
 
-All you need to start using the plugin is imgur.com **Client ID**.
+### Authenticated upload
 
-![image](https://user-images.githubusercontent.com/1719646/104515726-3bea4980-5604-11eb-92c5-9e448ff9c364.png)
+Go to plugin's settings, select 'Authenticated Imgur upload' and complete authentication.
+That's all! Now you are ready to make notes and upload all your images remotely.
+You will see all your uploaded images at <https://your_login.imgur.com/all/>
+
+### Anonymous upload
+
+You might not want to see your Obsidian images tied to Imgur account.
+
+For this case there is an 'Anonymous Imgur upload' option.
+To perform anonymous uploads, the plugin needs a **Client ID**.
+This plugin is already shipped with the embedded **Client ID**, which will be used by default until you provide your own.
+But this same Client ID will also be used by other users around the world,
+which may lead to [reaching daily upload limits](#known-limitations) for this shared Client ID.
+
+If you face problems with anonymous images upload, it is recommended to generate your own Client ID.
+Please follow instructions below.
+
+#### Obtaining your own Client ID
 
 If you do not have an imgur.com account, you need to [get one](https://imgur.com/register) first.
 
-When you sign in, go to https://api.imgur.com/oauth2/addclient
+After you signed in, go to <https://api.imgur.com/oauth2/addclient>
 and generate **Client ID** for Obsidian:
 
 - provide application name, i.e. "Obsidian"
 - choose "OAuth 2 authorization without a callback URL"
 - and specify your e-mail
 
-You only need **Client ID**, Client secret is not required.
+You only need **Client ID**, Client secret is not required, no need to record it.
 
 ## FAQ
 
 **Q:** How secure this approach is?  
 **A:** Nobody sees your uploaded image unless you share a link or someone magically guesses an URL to your image.
 
-**Q:** Why the images I upload do not get displayed on my Imgur account?  
-**A:** Even though you provide your client id in settings,
-images uploaded by thins plugin get posted "anonymously" (without being tied to your Imgur account).
-There are plans to implement advanced authentication to [allow uploads to your account][oauth-issue],
-choosing target album, etc.
-
-[oauth-issue]: https://github.com/gavvvr/obsidian-imgur-plugin/issues/5
-
 **Q:** Can I remove a remote image uploaded by accident?  
-**A:** It is possible (the Imgur API allows it), but the answer is no, it is not implemented.
+**A:** For authenticated uploads - yes, go to <https://your_login.imgur.com/all/>,
+for anonymous uploads - no
+(it is technically possible, but you will need a `deleteHash` which is not recorded. I would record it, but there is no place for logging in Obsidian yet)
 
 **Q:** For how long an image stays at imgur.com? Is there a chance to lose the data?  
-**A:** Earlier it [was stated on Imgur website][early-imgur-guarantees] that the image you upload stays **forever**.
+**A:** For authenticated uploads, I guess they are never deleted. What about anonymous uploads?
+Earlier it [was stated on Imgur website][early-imgur-guarantees] that the image you upload stays **forever**.
 I think this is true [since 2015][imgur-pro-free]. Today I could not find this statement on Imgur website.
 I can assume that images that did not receive any view for years, can be removed, but there is nothing to worry about.
 You can read my detailed thoughts on this in [discussions][ttl-discussion]
@@ -103,8 +116,8 @@ There is also a [plugin's thread][forum-thread] on Obsidian forum.
 
 - you can not paste animated gifs from the clipboard (they initially get copied as a static images to the clipboard).
   Use drag and drop instead if you want to upload an animated gif.
-- There are daily [upload limits](https://apidocs.imgur.com/#rate-limits),
-  but reaching them by manually making notes is hard to imagine.
+- There are daily [upload limits](https://apidocs.imgur.com/#rate-limits) for [Anonymous uploads](#anonymous-upload)
+  using the same Client ID. That's why it is [recommended to generate your own](#obtaining-your-own-client-id)
 
 ### Known issues
 
