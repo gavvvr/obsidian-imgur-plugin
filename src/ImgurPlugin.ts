@@ -2,34 +2,38 @@
 /* eslint-disable no-underscore-dangle */
 import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
 import * as CodeMirror from "codemirror";
-import { ImageUploader } from "./uploader/imageUploader";
+import ImageUploader from "./uploader/ImageUploader";
 // eslint-disable-next-line import/no-cycle
 import ImgurPluginSettingsTab from "./ui/ImgurPluginSettingsTab";
 import ApiError from "./uploader/ApiError";
-import ImgurAnonymousUploader from "./uploader/ImgurAnonymousUploader";
+import UploadStrategy from "./UploadStrategy";
+import buildUploaderFrom from "./uploader/imgUploaderFactory";
 
-interface ImgurPluginSettings {
+export interface ImgurPluginSettings {
+  uploadStrategy: string;
   clientId: string;
 }
+
+const DEFAULT_SETTINGS: ImgurPluginSettings = {
+  uploadStrategy: UploadStrategy.ANONYMOUS_IMGUR.id,
+  clientId: null,
+};
 
 type Handlers = {
   drop: (cm: CodeMirror.Editor, event: DragEvent) => void;
   paste: (cm: CodeMirror.Editor, event: ClipboardEvent) => void;
 };
 
-const DEFAULT_SETTINGS: ImgurPluginSettings = {
-  clientId: null,
-};
-
 export default class ImgurPlugin extends Plugin {
-  private static readonly FAILED_UPLOAD_COMMENT =
-    "⚠️Imgur upload failed, check dev console";
-
   settings: ImgurPluginSettings;
 
-  readonly cmAndHandlersMap = new Map<CodeMirror.Editor, Handlers>();
+  private readonly cmAndHandlersMap = new Map<CodeMirror.Editor, Handlers>();
 
-  private imgUploader: ImageUploader;
+  private imgUploaderField: ImageUploader;
+
+  get imgUploader(): ImageUploader {
+    return this.imgUploaderField;
+  }
 
   private async loadSettings() {
     this.settings = {
@@ -63,7 +67,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   setupImagesUploader(): void {
-    this.imgUploader = new ImgurAnonymousUploader(this.settings.clientId);
+    this.imgUploaderField = buildUploaderFrom(this.settings);
   }
 
   private setupImgurHandlers() {
@@ -75,8 +79,8 @@ export default class ImgurPlugin extends Plugin {
         _: CodeMirror.Editor,
         event: DragEvent
       ) => {
-        if (!this.settings.clientId) {
-          ImgurPlugin.showClientIdNotice();
+        if (!this.imgUploader) {
+          ImgurPlugin.showUnconfiguredPluginNotice();
           originalHandlers.drop(_, event);
           return;
         }
@@ -132,8 +136,8 @@ export default class ImgurPlugin extends Plugin {
         _: CodeMirror.Editor,
         e: ClipboardEvent
       ) => {
-        if (!this.settings.clientId) {
-          ImgurPlugin.showClientIdNotice();
+        if (!this.imgUploader) {
+          ImgurPlugin.showUnconfiguredPluginNotice();
           originalHandlers.paste(_, e);
           return;
         }
@@ -174,11 +178,11 @@ export default class ImgurPlugin extends Plugin {
     });
   }
 
-  private static showClientIdNotice() {
+  private static showUnconfiguredPluginNotice() {
     const fiveSecondsMillis = 5_000;
     // eslint-disable-next-line no-new
     new Notice(
-      "⚠️ Please either set imgur client_id or disable the imgur plugin",
+      "⚠️ Please configure Imgur plugin or disable it",
       fiveSecondsMillis
     );
   }
@@ -202,7 +206,7 @@ export default class ImgurPlugin extends Plugin {
 
     let imgUrl: string;
     try {
-      imgUrl = await this.imgUploader.upload(file);
+      imgUrl = await this.imgUploaderField.upload(file);
     } catch (e) {
       if (e instanceof ApiError) {
         this.handleFailedUpload(
@@ -212,7 +216,10 @@ export default class ImgurPlugin extends Plugin {
       } else {
         // eslint-disable-next-line no-console
         console.error("Failed imgur request: ", e);
-        this.handleFailedUpload(pasteId, ImgurPlugin.FAILED_UPLOAD_COMMENT);
+        this.handleFailedUpload(
+          pasteId,
+          "⚠️Imgur upload failed, check dev console"
+        );
       }
       throw e;
     }
@@ -248,6 +255,11 @@ export default class ImgurPlugin extends Plugin {
     );
   }
 
+  private getEditor(): Editor {
+    const mdView = this.app.workspace.activeLeaf.view as MarkdownView;
+    return mdView.editor;
+  }
+
   private static replaceFirstOccurrence(
     editor: Editor,
     target: string,
@@ -263,10 +275,5 @@ export default class ImgurPlugin extends Plugin {
         break;
       }
     }
-  }
-
-  private getEditor(): Editor {
-    const mdView = this.app.workspace.activeLeaf.view as MarkdownView;
-    return mdView.editor;
   }
 }

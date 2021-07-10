@@ -1,3 +1,3 @@
-export interface ImageUploader {
+export default interface ImageUploader {
   upload(image: File): Promise<string>;
 }
