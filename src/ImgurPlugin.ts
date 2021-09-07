@@ -8,15 +8,18 @@ import ImgurPluginSettingsTab from "./ui/ImgurPluginSettingsTab";
 import ApiError from "./uploader/ApiError";
 import UploadStrategy from "./UploadStrategy";
 import buildUploaderFrom from "./uploader/imgUploaderFactory";
+import RemoteUploadConfirmationDialog from "./ui/RemoteUploadConfirmationDialog";
 
 export interface ImgurPluginSettings {
   uploadStrategy: string;
   clientId: string;
+  showRemoteUploadConfirmation: boolean;
 }
 
 const DEFAULT_SETTINGS: ImgurPluginSettings = {
   uploadStrategy: UploadStrategy.ANONYMOUS_IMGUR.id,
   clientId: null,
+  showRemoteUploadConfirmation: true,
 };
 
 type Handlers = {
@@ -93,7 +96,42 @@ export default class ImgurPlugin extends Plugin {
           return;
         }
 
+        // Preserve files before showing modal, otherwise they will be lost from the event
         const { files } = event.dataTransfer;
+
+        if (this.settings.showRemoteUploadConfirmation) {
+          const modal = new RemoteUploadConfirmationDialog(this.app);
+          modal.open();
+
+          const userResp = await modal.response();
+          switch (userResp.shouldUpload) {
+            case undefined:
+              return;
+            case true:
+              if (userResp.alwaysUpload) {
+                this.settings.showRemoteUploadConfirmation = false;
+                this.saveSettings()
+                  .then(() => {})
+                  .catch(() => {});
+              }
+              break;
+            case false: {
+              // This case forces me to compose new event, the old does not have any files already
+              const filesArr: Array<File> = new Array<File>(files.length);
+              for (let i = 0; i < filesArr.length; i += 1) {
+                filesArr[i] = files[i];
+              }
+              originalHandlers.drop(
+                _,
+                ImgurPlugin.composeNewDragEvent(event, filesArr)
+              );
+              return;
+            }
+            default:
+              return;
+          }
+        }
+
         for (let i = 0; i < files.length; i += 1) {
           if (!files[i].type.startsWith("image")) {
             // using original handlers if at least one of drag-and drop files is not an image
@@ -132,7 +170,7 @@ export default class ImgurPlugin extends Plugin {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (cm as any)._handlers.paste[0] = (
+      (cm as any)._handlers.paste[0] = async (
         _: CodeMirror.Editor,
         e: ClipboardEvent
       ) => {
@@ -146,6 +184,30 @@ export default class ImgurPlugin extends Plugin {
         if (files.length === 0 || !files[0].type.startsWith("image")) {
           originalHandlers.paste(_, e);
           return;
+        }
+
+        if (this.settings.showRemoteUploadConfirmation) {
+          const modal = new RemoteUploadConfirmationDialog(this.app);
+          modal.open();
+
+          const userResp = await modal.response();
+          switch (userResp.shouldUpload) {
+            case undefined:
+              return;
+            case true:
+              if (userResp.alwaysUpload) {
+                this.settings.showRemoteUploadConfirmation = false;
+                this.saveSettings()
+                  .then(() => {})
+                  .catch(() => {});
+              }
+              break;
+            case false:
+              originalHandlers.paste(_, e);
+              return;
+            default:
+              return;
+          }
         }
 
         for (let i = 0; i < files.length; i += 1) {
@@ -171,7 +233,7 @@ export default class ImgurPlugin extends Plugin {
       return dt;
     }, new DataTransfer());
 
-    return new DragEvent("drop", {
+    return new DragEvent(originalEvent.type, {
       dataTransfer,
       clientX: originalEvent.clientX,
       clientY: originalEvent.clientY,

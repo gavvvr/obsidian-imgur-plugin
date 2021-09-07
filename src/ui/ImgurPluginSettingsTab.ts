@@ -47,7 +47,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     });
   }
 
-  async display(): Promise<void> {
+  display(): void {
     const { containerEl } = this;
 
     containerEl.empty();
@@ -71,7 +71,16 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
         });
       });
 
-    await this.drawSettings(this.strategyDiv);
+    this.drawSettings(this.strategyDiv)
+      .then(() => {})
+      .finally(() => {});
+
+    new Setting(containerEl).setName("Confirm before upload").addToggle((t) => {
+      t.setValue(this.plugin.settings.showRemoteUploadConfirmation);
+      t.onChange((newValue) => {
+        this.plugin.settings.showRemoteUploadConfirmation = newValue;
+      });
+    });
   }
 
   async hide(): Promise<any> {
