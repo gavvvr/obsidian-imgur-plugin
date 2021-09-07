@@ -1,8 +1,8 @@
 {
 	"id": "obsidian-imgur-plugin",
 	"name": "Imgur Plugin",
-	"version": "2.0.0",
-	"minAppVersion": "0.12.5",
+	"version": "2.1.0",
+	"minAppVersion": "0.12.15",
 	"description": "This plugin uploads images from your clipboard to imgur.com and embeds uploaded image to your note",
 	"author": "Kirill Gavrilov",
 	"authorUrl": "https://github.com/gavvvr",
