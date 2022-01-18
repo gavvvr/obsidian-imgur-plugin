@@ -1,6 +1,6 @@
 {
   "name": "obsidian-imgur-plugin",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "This plugin uploads images from your clipboard to imgur.com and embeds uploaded image to your note",
   "main": "main.js",
   "scripts": {
