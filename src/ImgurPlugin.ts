@@ -1,7 +1,6 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-underscore-dangle */
 import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
-import * as CodeMirror from "codemirror";
 import ImageUploader from "./uploader/ImageUploader";
 // eslint-disable-next-line import/no-cycle
 import ImgurPluginSettingsTab from "./ui/ImgurPluginSettingsTab";
@@ -9,6 +8,19 @@ import ApiError from "./uploader/ApiError";
 import UploadStrategy from "./UploadStrategy";
 import buildUploaderFrom from "./uploader/imgUploaderFactory";
 import RemoteUploadConfirmationDialog from "./ui/RemoteUploadConfirmationDialog";
+import PasteEventCopy from "./aux-event-classes/PasteEventCopy";
+import DragEventCopy from "./aux-event-classes/DragEventCopy";
+
+declare module "obsidian" {
+  interface MarkdownSubView {
+    clipboardManager: ClipboardManager;
+  }
+}
+
+interface ClipboardManager {
+  handlePaste(e: ClipboardEvent): void;
+  handleDrop(e: DragEvent): void;
+}
 
 export interface ImgurPluginSettings {
   uploadStrategy: string;
@@ -22,17 +34,148 @@ const DEFAULT_SETTINGS: ImgurPluginSettings = {
   showRemoteUploadConfirmation: true,
 };
 
-type Handlers = {
-  drop: (cm: CodeMirror.Editor, event: DragEvent) => void;
-  paste: (cm: CodeMirror.Editor, event: ClipboardEvent) => void;
-};
-
 export default class ImgurPlugin extends Plugin {
   settings: ImgurPluginSettings;
 
-  private readonly cmAndHandlersMap = new Map<CodeMirror.Editor, Handlers>();
-
   private imgUploaderField: ImageUploader;
+
+  private customPasteEventCallback = async (
+    e: ClipboardEvent,
+    _: Editor,
+    markdownView: MarkdownView
+  ) => {
+    if (e instanceof PasteEventCopy) return;
+
+    if (!this.imgUploader) {
+      ImgurPlugin.showUnconfiguredPluginNotice();
+      return;
+    }
+
+    const { files } = e.clipboardData;
+    if (files.length === 0 || !files[0].type.startsWith("image")) {
+      return;
+    }
+
+    e.preventDefault();
+
+    if (this.settings.showRemoteUploadConfirmation) {
+      const modal = new RemoteUploadConfirmationDialog(this.app);
+      modal.open();
+
+      const userResp = await modal.response();
+      switch (userResp.shouldUpload) {
+        case undefined:
+          return;
+        case true:
+          if (userResp.alwaysUpload) {
+            this.settings.showRemoteUploadConfirmation = false;
+            this.saveSettings()
+              .then(() => {})
+              .catch(() => {});
+          }
+          break;
+        case false:
+          markdownView.currentMode.clipboardManager.handlePaste(
+            new PasteEventCopy(e)
+          );
+          return;
+        default:
+          return;
+      }
+    }
+
+    for (let i = 0; i < files.length; i += 1) {
+      this.uploadFileAndEmbedImgurImage(files[i]).catch(() => {
+        markdownView.currentMode.clipboardManager.handlePaste(
+          new PasteEventCopy(e)
+        );
+      });
+    }
+  };
+
+  private customDropEventListener = async (
+    e: DragEvent,
+    _: Editor,
+    markdownView: MarkdownView
+  ) => {
+    if (e instanceof DragEventCopy) return;
+
+    if (!this.imgUploader) {
+      ImgurPlugin.showUnconfiguredPluginNotice();
+      return;
+    }
+
+    if (
+      e.dataTransfer.types.length !== 1 ||
+      e.dataTransfer.types[0] !== "Files"
+    ) {
+      return;
+    }
+
+    // Preserve files before showing modal, otherwise they will be lost from the event
+    const { files } = e.dataTransfer;
+
+    e.preventDefault();
+
+    if (this.settings.showRemoteUploadConfirmation) {
+      const modal = new RemoteUploadConfirmationDialog(this.app);
+      modal.open();
+
+      const userResp = await modal.response();
+      switch (userResp.shouldUpload) {
+        case undefined:
+          return;
+        case true:
+          if (userResp.alwaysUpload) {
+            this.settings.showRemoteUploadConfirmation = false;
+            this.saveSettings()
+              .then(() => {})
+              .catch(() => {});
+          }
+          break;
+        case false: {
+          markdownView.currentMode.clipboardManager.handleDrop(
+            DragEventCopy.create(e, files)
+          );
+          return;
+        }
+        default:
+          return;
+      }
+    }
+
+    for (let i = 0; i < files.length; i += 1) {
+      if (!files[i].type.startsWith("image")) {
+        return;
+      }
+    }
+
+    // Adding newline to avoid messing images pasted via default handler
+    // with any text added by the plugin
+    this.getEditor().replaceSelection("\n");
+
+    const promises: Promise<void>[] = [];
+    const filesFailedToUpload: File[] = [];
+    for (let i = 0; i < files.length; i += 1) {
+      const image = files[i];
+      const uploadPromise = this.uploadFileAndEmbedImgurImage(image).catch(
+        () => {
+          filesFailedToUpload.push(image);
+        }
+      );
+      promises.push(uploadPromise);
+    }
+
+    await Promise.all(promises);
+
+    if (filesFailedToUpload.length === 0) {
+      return;
+    }
+
+    markdownView.currentMode.clipboardManager.handleDrop(
+      DragEventCopy.create(e, filesFailedToUpload)
+    );
+  };
 
   get imgUploader(): ImageUploader {
     return this.imgUploaderField;
@@ -49,19 +192,6 @@ export default class ImgurPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  onunload(): void {
-    this.restoreOriginalHandlers();
-  }
-
-  private restoreOriginalHandlers() {
-    this.cmAndHandlersMap.forEach((originalHandlers, cm) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (cm as any)._handlers.drop[0] = originalHandlers.drop;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (cm as any)._handlers.paste[0] = originalHandlers.paste;
-    });
-  }
-
   async onload(): Promise<void> {
     await this.loadSettings();
     this.addSettingTab(new ImgurPluginSettingsTab(this.app, this));
@@ -74,170 +204,12 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private setupImgurHandlers() {
-    this.registerCodeMirror((cm: CodeMirror.Editor) => {
-      const originalHandlers = this.backupOriginalHandlers(cm);
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (cm as any)._handlers.drop[0] = async (
-        _: CodeMirror.Editor,
-        event: DragEvent
-      ) => {
-        if (!this.imgUploader) {
-          ImgurPlugin.showUnconfiguredPluginNotice();
-          originalHandlers.drop(_, event);
-          return;
-        }
-
-        if (
-          event.dataTransfer.types.length !== 1 ||
-          event.dataTransfer.types[0] !== "Files"
-        ) {
-          originalHandlers.drop(_, event);
-          return;
-        }
-
-        // Preserve files before showing modal, otherwise they will be lost from the event
-        const { files } = event.dataTransfer;
-
-        if (this.settings.showRemoteUploadConfirmation) {
-          const modal = new RemoteUploadConfirmationDialog(this.app);
-          modal.open();
-
-          const userResp = await modal.response();
-          switch (userResp.shouldUpload) {
-            case undefined:
-              return;
-            case true:
-              if (userResp.alwaysUpload) {
-                this.settings.showRemoteUploadConfirmation = false;
-                this.saveSettings()
-                  .then(() => {})
-                  .catch(() => {});
-              }
-              break;
-            case false: {
-              // This case forces me to compose new event, the old does not have any files already
-              const filesArr: Array<File> = new Array<File>(files.length);
-              for (let i = 0; i < filesArr.length; i += 1) {
-                filesArr[i] = files[i];
-              }
-              originalHandlers.drop(
-                _,
-                ImgurPlugin.composeNewDragEvent(event, filesArr)
-              );
-              return;
-            }
-            default:
-              return;
-          }
-        }
-
-        for (let i = 0; i < files.length; i += 1) {
-          if (!files[i].type.startsWith("image")) {
-            // using original handlers if at least one of drag-and drop files is not an image
-            // It is not possible to call DragEvent.dataTransfer#clearData(images) here
-            // to split images and non-images processing
-            originalHandlers.drop(_, event);
-            return;
-          }
-        }
-
-        // Adding newline to avoid messing images pasted via default handler
-        // with any text added by the plugin
-        this.getEditor().replaceSelection("\n");
-
-        const promises: Promise<void>[] = [];
-        const filesFailedToUpload: File[] = [];
-        for (let i = 0; i < files.length; i += 1) {
-          const image = files[i];
-          const uploadPromise = this.uploadFileAndEmbedImgurImage(image).catch(
-            () => {
-              filesFailedToUpload.push(image);
-            }
-          );
-          promises.push(uploadPromise);
-        }
-
-        await Promise.all(promises);
-
-        if (filesFailedToUpload.length === 0) return;
-
-        const newEvt = ImgurPlugin.composeNewDragEvent(
-          event,
-          filesFailedToUpload
-        );
-        originalHandlers.drop(_, newEvt);
-      };
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (cm as any)._handlers.paste[0] = async (
-        _: CodeMirror.Editor,
-        e: ClipboardEvent
-      ) => {
-        if (!this.imgUploader) {
-          ImgurPlugin.showUnconfiguredPluginNotice();
-          originalHandlers.paste(_, e);
-          return;
-        }
-
-        const { files } = e.clipboardData;
-        if (files.length === 0 || !files[0].type.startsWith("image")) {
-          originalHandlers.paste(_, e);
-          return;
-        }
-
-        if (this.settings.showRemoteUploadConfirmation) {
-          const modal = new RemoteUploadConfirmationDialog(this.app);
-          modal.open();
-
-          const userResp = await modal.response();
-          switch (userResp.shouldUpload) {
-            case undefined:
-              return;
-            case true:
-              if (userResp.alwaysUpload) {
-                this.settings.showRemoteUploadConfirmation = false;
-                this.saveSettings()
-                  .then(() => {})
-                  .catch(() => {});
-              }
-              break;
-            case false:
-              originalHandlers.paste(_, e);
-              return;
-            default:
-              return;
-          }
-        }
-
-        for (let i = 0; i < files.length; i += 1) {
-          this.uploadFileAndEmbedImgurImage(files[i]).catch(() => {
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(files[i]);
-            const newEvt = new ClipboardEvent("paste", {
-              clipboardData: dataTransfer,
-            });
-            originalHandlers.paste(_, newEvt);
-          });
-        }
-      };
-    });
-  }
-
-  private static composeNewDragEvent(
-    originalEvent: DragEvent,
-    failedUploads: File[]
-  ) {
-    const dataTransfer = failedUploads.reduce((dt, fileFailedToUpload) => {
-      dt.items.add(fileFailedToUpload);
-      return dt;
-    }, new DataTransfer());
-
-    return new DragEvent(originalEvent.type, {
-      dataTransfer,
-      clientX: originalEvent.clientX,
-      clientY: originalEvent.clientY,
-    });
+    this.registerEvent(
+      this.app.workspace.on("editor-paste", this.customPasteEventCallback)
+    );
+    this.registerEvent(
+      this.app.workspace.on("editor-drop", this.customDropEventListener)
+    );
   }
 
   private static showUnconfiguredPluginNotice() {
@@ -247,19 +219,6 @@ export default class ImgurPlugin extends Plugin {
       "⚠️ Please configure Imgur plugin or disable it",
       fiveSecondsMillis
     );
-  }
-
-  private backupOriginalHandlers(cm: CodeMirror.Editor) {
-    if (!this.cmAndHandlersMap.has(cm)) {
-      this.cmAndHandlersMap.set(cm, {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-        drop: (cm as any)._handlers.drop[0],
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-        paste: (cm as any)._handlers.paste[0],
-      });
-    }
-
-    return this.cmAndHandlersMap.get(cm);
   }
 
   private async uploadFileAndEmbedImgurImage(file: File) {
