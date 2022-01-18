@@ -27,7 +27,7 @@
     "eslint-plugin-import": "^2.23.4",
     "husky": "^6.0.0",
     "lint-staged": "^11.0.0",
-    "obsidian": "^0.12.0",
+    "obsidian": "^0.13.21",
     "obsidian-plugin-cli": "^0.8.0",
     "prettier": "2.3.1",
     "rollup": "^2.32.1",
