@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
     "build": "rollup --config rollup.config.js --environment BUILD:production",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "commit": "git-cz"
+  },
+  "config": {
+    "commitizen": {
+      "path": "@commitlint/cz-commitlint"
+    }
   },
   "keywords": [
     "obsidian.md",
@@ -17,12 +23,14 @@
   "devDependencies": {
     "@commitlint/cli": "^16.0.3",
     "@commitlint/config-conventional": "^16.0.0",
+    "@commitlint/cz-commitlint": "^16.0.3",
     "@rollup/plugin-commonjs": "^18.0.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "@rollup/plugin-typescript": "^8.2.1",
     "@types/node": "^14.14.37",
     "@typescript-eslint/eslint-plugin": "^4.26.1",
     "@typescript-eslint/parser": "^4.26.1",
+    "commitizen": "^4.2.4",
     "eslint": "^7.28.0",
     "eslint-config-airbnb-typescript": "^12.3.1",
     "eslint-config-prettier": "^8.3.0",
