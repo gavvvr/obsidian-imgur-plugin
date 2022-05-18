@@ -11,3 +11,6 @@ main.js
 
 # eslint
 .eslintcache
+
+# c8
+coverage/

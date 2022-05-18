@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "test": "vitest",
+    "test": "vitest --coverage",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "prepare": "husky install",
     "commit": "git-cz"
@@ -29,6 +29,7 @@
     "@typescript-eslint/eslint-plugin": "^5.10.1",
     "@typescript-eslint/parser": "^5.10.1",
     "builtin-modules": "^3.2.0",
+    "c8": "^7.11.3",
     "commitizen": "^4.2.4",
     "esbuild": "^0.14.13",
     "eslint": "^8.7.0",
