@@ -10,6 +10,8 @@ import buildUploaderFrom from "./uploader/imgUploaderFactory";
 import RemoteUploadConfirmationDialog from "./ui/RemoteUploadConfirmationDialog";
 import PasteEventCopy from "./aux-event-classes/PasteEventCopy";
 import DragEventCopy from "./aux-event-classes/DragEventCopy";
+import editorCheckCallbackFor from "./imgur/resizing/plugin-callback";
+import ImgurSize from "./imgur/resizing/ImgurSize";
 
 declare module "obsidian" {
   interface MarkdownSubView {
@@ -193,6 +195,17 @@ export default class ImgurPlugin extends Plugin {
   }
 
   async onload(): Promise<void> {
+    const sizes = ImgurSize.values();
+    for (let i = 0; i < sizes.length; i += 1) {
+      const size = sizes[i];
+      this.addCommand({
+        id: `imgur-resize-${size.suffix}-command`,
+        name: `Resize to ${size.description}${
+          size.sizeHint ? ` (${size.sizeHint})` : ""
+        }`,
+        editorCheckCallback: editorCheckCallbackFor(size),
+      });
+    }
     await this.loadSettings();
     this.addSettingTab(new ImgurPluginSettingsTab(this.app, this));
     this.setupImgurHandlers();
