@@ -5,5 +5,7 @@ export default defineConfig({
     coverage: {
       reporter: ["lcov", "html"],
     },
+    reporters: ["default", "junit"],
+    outputFile: "test-results.xml",
   },
 });
