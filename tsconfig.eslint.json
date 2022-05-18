@@ -3,5 +3,10 @@
     "noEmit": true,
   },
   "extends": "./tsconfig.json",
-  "include": ["src/**/*.ts", "*.js", ".eslintrc.js"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "*.js",
+    "vitest.config.ts"
+  ]
 }
