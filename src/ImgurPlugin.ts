@@ -117,6 +117,12 @@ export default class ImgurPlugin extends Plugin {
     // Preserve files before showing modal, otherwise they will be lost from the event
     const { files } = e.dataTransfer;
 
+    if (files.length === 0) return;
+
+    for (let i = 0; i < files.length; i += 1) {
+      if (!files[i].type.startsWith("image")) return;
+    }
+
     e.preventDefault();
 
     if (this.settings.showRemoteUploadConfirmation) {
@@ -143,12 +149,6 @@ export default class ImgurPlugin extends Plugin {
         }
         default:
           return;
-      }
-    }
-
-    for (let i = 0; i < files.length; i += 1) {
-      if (!files[i].type.startsWith("image")) {
-        return;
       }
     }
 
