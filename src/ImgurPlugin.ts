@@ -64,9 +64,8 @@ export default class ImgurPlugin extends Plugin {
     }
 
     const { files } = e.clipboardData;
-    if (files.length === 0 || !files[0].type.startsWith("image")) {
-      return;
-    }
+
+    if (!allFilesAreImages(files)) return;
 
     e.preventDefault();
 
