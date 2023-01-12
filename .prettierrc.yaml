@@ -1,4 +1,7 @@
 # Some settings are automatically inherited from .editorconfig
+semi: false
+trailingComma: all
+singleQuote: true
 overrides:
   - files: ".editorconfig"
     options:
