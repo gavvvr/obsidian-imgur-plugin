@@ -1,8 +1,5 @@
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-underscore-dangle */
 import { Editor, MarkdownView, Notice, Plugin } from 'obsidian'
 import ImageUploader from './uploader/ImageUploader'
-// eslint-disable-next-line import/no-cycle
 import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
 import ApiError from './uploader/ApiError'
 import UploadStrategy from './UploadStrategy'
@@ -80,9 +77,7 @@ export default class ImgurPlugin extends Plugin {
         case true:
           if (userResp.alwaysUpload) {
             this.settings.showRemoteUploadConfirmation = false
-            this.saveSettings()
-              .then(() => {})
-              .catch(() => {})
+            void this.saveSettings()
           }
           break
         case false:
@@ -130,9 +125,7 @@ export default class ImgurPlugin extends Plugin {
         case true:
           if (userResp.alwaysUpload) {
             this.settings.showRemoteUploadConfirmation = false
-            this.saveSettings()
-              .then(() => {})
-              .catch(() => {})
+            void this.saveSettings()
           }
           break
         case false: {
@@ -211,7 +204,6 @@ export default class ImgurPlugin extends Plugin {
 
   private static showUnconfiguredPluginNotice() {
     const fiveSecondsMillis = 5_000
-    // eslint-disable-next-line no-new
     new Notice('⚠️ Please configure Imgur plugin or disable it', fiveSecondsMillis)
   }
 
@@ -229,7 +221,6 @@ export default class ImgurPlugin extends Plugin {
           `Upload failed, remote server returned an error: ${e.message}`,
         )
       } else {
-        // eslint-disable-next-line no-console
         console.error('Failed imgur request: ', e)
         this.handleFailedUpload(pasteId, '⚠️Imgur upload failed, check dev console')
       }

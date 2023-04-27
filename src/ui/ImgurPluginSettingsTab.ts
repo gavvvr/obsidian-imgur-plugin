@@ -1,11 +1,8 @@
 import { App, Notice, PluginSettingTab, Setting } from 'obsidian'
-// eslint-disable-next-line import/no-cycle
 import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from 'src/imgur/constants'
-// eslint-disable-next-line import/no-cycle
 import ImgurPlugin from '../ImgurPlugin'
 import UploadStrategy from '../UploadStrategy'
 import ImgurAuthModal from './ImgurAuthModal'
-// eslint-disable-next-line import/no-cycle
 import ImgurAuthenticationStatusItem from './ImgurAuthenticationStatus'
 
 const REGISTER_CLIENT_URL = 'https://api.imgur.com/oauth2/addclient'
@@ -25,7 +22,6 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
       if (!this.authModal || !this.authModal.isOpen) return
 
       if (params.error) {
-        // eslint-disable-next-line no-new
         new Notice(`Authentication failed with error: ${params.error}`)
         return
       }
@@ -66,9 +62,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
       })
     })
 
-    this.drawSettings(this.strategyDiv)
-      .then(() => {})
-      .finally(() => {})
+    void this.drawSettings(this.strategyDiv)
 
     new Setting(containerEl).setName('Confirm before upload').addToggle((t) => {
       t.setValue(this.plugin.settings.showRemoteUploadConfirmation)
@@ -78,7 +72,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     })
   }
 
-  async hide(): Promise<any> {
+  async hide(): Promise<void> {
     await this.plugin.saveSettings()
     this.plugin.setupImagesUploader()
   }

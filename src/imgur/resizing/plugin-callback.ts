@@ -14,11 +14,11 @@ const editorCheckCallbackFor = (size: ImgurSize) => (checking: boolean, editor: 
   try {
     replacement = resizeTo(size)(match.mdImagePieces)
   } catch (e) {
-    if (e instanceof Error)
-      // eslint-disable-next-line no-new
+    if (e instanceof Error) {
       new Notice(e.message)
-    // eslint-disable-next-line no-console
-    else console.error(e)
+    } else {
+      console.error(e)
+    }
     return false
   }
 

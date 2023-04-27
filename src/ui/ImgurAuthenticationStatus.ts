@@ -3,7 +3,6 @@ import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY, IMGUR_PLUGIN_CLIENT_ID } from 'src
 import ApiError from 'src/uploader/ApiError'
 import ImgurAuthenticatedUploader from 'src/uploader/imgur/ImgurAuthenticatedUploader'
 import ImgurAuthModal from './ImgurAuthModal'
-// eslint-disable-next-line import/no-cycle
 import ImgurPluginSettingsTab from './ImgurPluginSettingsTab'
 
 export default class ImgurAuthenticationStatus {
@@ -58,7 +57,6 @@ export default class ImgurAuthenticationStatus {
       } else if (e instanceof ApiError) {
         this.authStatusDiv.setText(`Imgur session error: ${e.message}`)
       } else {
-        // eslint-disable-next-line no-console
         console.warn('Not authenticated, exception: ', e)
         this.setNotAuthenticated()
       }
