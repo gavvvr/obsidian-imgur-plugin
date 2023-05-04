@@ -3,9 +3,9 @@ semi: false
 trailingComma: all
 singleQuote: true
 overrides:
-  - files: ".editorconfig"
+  - files: '.editorconfig'
     options:
       parser: yaml
-  - files: "LICENSE"
+  - files: 'LICENSE'
     options:
       parser: markdown

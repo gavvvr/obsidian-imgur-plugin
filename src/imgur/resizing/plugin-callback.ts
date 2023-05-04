@@ -1,37 +1,33 @@
-import { Editor, Notice } from "obsidian";
-import ImgurSize from "./ImgurSize";
-import findImgurMarkdownImage from "./md-image-parsing";
-import resizeTo from "./resizing";
+import { Editor, Notice } from 'obsidian'
+import ImgurSize from './ImgurSize'
+import findImgurMarkdownImage from './md-image-parsing'
+import resizeTo from './resizing'
 
-const editorCheckCallbackFor =
-  (size: ImgurSize) => (checking: boolean, editor: Editor) => {
-    const lineNumber = editor.getCursor().line;
-    const match = findImgurMarkdownImage(
-      editor.getLine(lineNumber),
-      editor.getCursor().ch
-    );
+const editorCheckCallbackFor = (size: ImgurSize) => (checking: boolean, editor: Editor) => {
+  const lineNumber = editor.getCursor().line
+  const match = findImgurMarkdownImage(editor.getLine(lineNumber), editor.getCursor().ch)
 
-    if (!match.exists) return false;
-    if (checking && match.exists) return true;
+  if (!match.exists) return false
+  if (checking && match.exists) return true
 
-    let replacement;
-    try {
-      replacement = resizeTo(size)(match.mdImagePieces);
-    } catch (e) {
-      if (e instanceof Error)
-        // eslint-disable-next-line no-new
-        new Notice(e.message);
-      // eslint-disable-next-line no-console
-      else console.error(e);
-      return false;
-    }
+  let replacement
+  try {
+    replacement = resizeTo(size)(match.mdImagePieces)
+  } catch (e) {
+    if (e instanceof Error)
+      // eslint-disable-next-line no-new
+      new Notice(e.message)
+    // eslint-disable-next-line no-console
+    else console.error(e)
+    return false
+  }
 
-    editor.replaceRange(
-      replacement.content,
-      { line: lineNumber, ch: replacement.from },
-      { line: lineNumber, ch: replacement.to }
-    );
-    return true;
-  };
+  editor.replaceRange(
+    replacement.content,
+    { line: lineNumber, ch: replacement.from },
+    { line: lineNumber, ch: replacement.to },
+  )
+  return true
+}
 
-export default editorCheckCallbackFor;
+export default editorCheckCallbackFor

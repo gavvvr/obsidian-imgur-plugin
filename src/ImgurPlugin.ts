@@ -1,317 +1,278 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-underscore-dangle */
-import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
-import ImageUploader from "./uploader/ImageUploader";
+import { Editor, MarkdownView, Notice, Plugin } from 'obsidian'
+import ImageUploader from './uploader/ImageUploader'
 // eslint-disable-next-line import/no-cycle
-import ImgurPluginSettingsTab from "./ui/ImgurPluginSettingsTab";
-import ApiError from "./uploader/ApiError";
-import UploadStrategy from "./UploadStrategy";
-import buildUploaderFrom from "./uploader/imgUploaderFactory";
-import RemoteUploadConfirmationDialog from "./ui/RemoteUploadConfirmationDialog";
-import PasteEventCopy from "./aux-event-classes/PasteEventCopy";
-import DragEventCopy from "./aux-event-classes/DragEventCopy";
-import editorCheckCallbackFor from "./imgur/resizing/plugin-callback";
-import ImgurSize from "./imgur/resizing/ImgurSize";
+import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
+import ApiError from './uploader/ApiError'
+import UploadStrategy from './UploadStrategy'
+import buildUploaderFrom from './uploader/imgUploaderFactory'
+import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
+import PasteEventCopy from './aux-event-classes/PasteEventCopy'
+import DragEventCopy from './aux-event-classes/DragEventCopy'
+import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
+import ImgurSize from './imgur/resizing/ImgurSize'
 
-declare module "obsidian" {
+declare module 'obsidian' {
   interface MarkdownSubView {
-    clipboardManager: ClipboardManager;
+    clipboardManager: ClipboardManager
   }
 }
 
 interface ClipboardManager {
-  handlePaste(e: ClipboardEvent): void;
-  handleDrop(e: DragEvent): void;
+  handlePaste(e: ClipboardEvent): void
+  handleDrop(e: DragEvent): void
 }
 
 export interface ImgurPluginSettings {
-  uploadStrategy: string;
-  clientId: string;
-  showRemoteUploadConfirmation: boolean;
+  uploadStrategy: string
+  clientId: string
+  showRemoteUploadConfirmation: boolean
 }
 
 const DEFAULT_SETTINGS: ImgurPluginSettings = {
   uploadStrategy: UploadStrategy.ANONYMOUS_IMGUR.id,
   clientId: null,
   showRemoteUploadConfirmation: true,
-};
+}
 
 function allFilesAreImages(files: FileList) {
-  if (files.length === 0) return false;
+  if (files.length === 0) return false
 
   for (let i = 0; i < files.length; i += 1) {
-    if (!files[i].type.startsWith("image")) return false;
+    if (!files[i].type.startsWith('image')) return false
   }
 
-  return true;
+  return true
 }
 
 export default class ImgurPlugin extends Plugin {
-  settings: ImgurPluginSettings;
+  settings: ImgurPluginSettings
 
-  private imgUploaderField: ImageUploader;
+  private imgUploaderField: ImageUploader
 
   private customPasteEventCallback = async (
     e: ClipboardEvent,
     _: Editor,
-    markdownView: MarkdownView
+    markdownView: MarkdownView,
   ) => {
-    if (e instanceof PasteEventCopy) return;
+    if (e instanceof PasteEventCopy) return
 
     if (!this.imgUploader) {
-      ImgurPlugin.showUnconfiguredPluginNotice();
-      return;
+      ImgurPlugin.showUnconfiguredPluginNotice()
+      return
     }
 
-    const { files } = e.clipboardData;
+    const { files } = e.clipboardData
 
-    if (!allFilesAreImages(files)) return;
+    if (!allFilesAreImages(files)) return
 
-    e.preventDefault();
+    e.preventDefault()
 
     if (this.settings.showRemoteUploadConfirmation) {
-      const modal = new RemoteUploadConfirmationDialog(this.app);
-      modal.open();
+      const modal = new RemoteUploadConfirmationDialog(this.app)
+      modal.open()
 
-      const userResp = await modal.response();
+      const userResp = await modal.response()
       switch (userResp.shouldUpload) {
         case undefined:
-          return;
+          return
         case true:
           if (userResp.alwaysUpload) {
-            this.settings.showRemoteUploadConfirmation = false;
+            this.settings.showRemoteUploadConfirmation = false
             this.saveSettings()
               .then(() => {})
-              .catch(() => {});
+              .catch(() => {})
           }
-          break;
+          break
         case false:
-          markdownView.currentMode.clipboardManager.handlePaste(
-            new PasteEventCopy(e)
-          );
-          return;
+          markdownView.currentMode.clipboardManager.handlePaste(new PasteEventCopy(e))
+          return
         default:
-          return;
+          return
       }
     }
 
     for (let i = 0; i < files.length; i += 1) {
       this.uploadFileAndEmbedImgurImage(files[i]).catch(() => {
-        markdownView.currentMode.clipboardManager.handlePaste(
-          new PasteEventCopy(e)
-        );
-      });
+        markdownView.currentMode.clipboardManager.handlePaste(new PasteEventCopy(e))
+      })
     }
-  };
+  }
 
-  private customDropEventListener = async (
-    e: DragEvent,
-    _: Editor,
-    markdownView: MarkdownView
-  ) => {
-    if (e instanceof DragEventCopy) return;
+  private customDropEventListener = async (e: DragEvent, _: Editor, markdownView: MarkdownView) => {
+    if (e instanceof DragEventCopy) return
 
     if (!this.imgUploader) {
-      ImgurPlugin.showUnconfiguredPluginNotice();
-      return;
+      ImgurPlugin.showUnconfiguredPluginNotice()
+      return
     }
 
-    if (
-      e.dataTransfer.types.length !== 1 ||
-      e.dataTransfer.types[0] !== "Files"
-    ) {
-      return;
+    if (e.dataTransfer.types.length !== 1 || e.dataTransfer.types[0] !== 'Files') {
+      return
     }
 
     // Preserve files before showing modal, otherwise they will be lost from the event
-    const { files } = e.dataTransfer;
+    const { files } = e.dataTransfer
 
-    if (!allFilesAreImages(files)) return;
+    if (!allFilesAreImages(files)) return
 
-    e.preventDefault();
+    e.preventDefault()
 
     if (this.settings.showRemoteUploadConfirmation) {
-      const modal = new RemoteUploadConfirmationDialog(this.app);
-      modal.open();
+      const modal = new RemoteUploadConfirmationDialog(this.app)
+      modal.open()
 
-      const userResp = await modal.response();
+      const userResp = await modal.response()
       switch (userResp.shouldUpload) {
         case undefined:
-          return;
+          return
         case true:
           if (userResp.alwaysUpload) {
-            this.settings.showRemoteUploadConfirmation = false;
+            this.settings.showRemoteUploadConfirmation = false
             this.saveSettings()
               .then(() => {})
-              .catch(() => {});
+              .catch(() => {})
           }
-          break;
+          break
         case false: {
-          markdownView.currentMode.clipboardManager.handleDrop(
-            DragEventCopy.create(e, files)
-          );
-          return;
+          markdownView.currentMode.clipboardManager.handleDrop(DragEventCopy.create(e, files))
+          return
         }
         default:
-          return;
+          return
       }
     }
 
     // Adding newline to avoid messing images pasted via default handler
     // with any text added by the plugin
-    this.getEditor().replaceSelection("\n");
+    this.getEditor().replaceSelection('\n')
 
-    const promises: Promise<void>[] = [];
-    const filesFailedToUpload: File[] = [];
+    const promises: Promise<void>[] = []
+    const filesFailedToUpload: File[] = []
     for (let i = 0; i < files.length; i += 1) {
-      const image = files[i];
-      const uploadPromise = this.uploadFileAndEmbedImgurImage(image).catch(
-        () => {
-          filesFailedToUpload.push(image);
-        }
-      );
-      promises.push(uploadPromise);
+      const image = files[i]
+      const uploadPromise = this.uploadFileAndEmbedImgurImage(image).catch(() => {
+        filesFailedToUpload.push(image)
+      })
+      promises.push(uploadPromise)
     }
 
-    await Promise.all(promises);
+    await Promise.all(promises)
 
     if (filesFailedToUpload.length === 0) {
-      return;
+      return
     }
 
     markdownView.currentMode.clipboardManager.handleDrop(
-      DragEventCopy.create(e, filesFailedToUpload)
-    );
-  };
+      DragEventCopy.create(e, filesFailedToUpload),
+    )
+  }
 
   get imgUploader(): ImageUploader {
-    return this.imgUploaderField;
+    return this.imgUploaderField
   }
 
   private async loadSettings() {
     this.settings = {
       ...DEFAULT_SETTINGS,
       ...((await this.loadData()) as ImgurPluginSettings),
-    };
+    }
   }
 
   async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
+    await this.saveData(this.settings)
   }
 
   async onload(): Promise<void> {
-    const sizes = ImgurSize.values();
+    const sizes = ImgurSize.values()
     for (let i = 0; i < sizes.length; i += 1) {
-      const size = sizes[i];
+      const size = sizes[i]
       this.addCommand({
         id: `imgur-resize-${size.suffix}-command`,
-        name: `Resize to ${size.description}${
-          size.sizeHint ? ` (${size.sizeHint})` : ""
-        }`,
+        name: `Resize to ${size.description}${size.sizeHint ? ` (${size.sizeHint})` : ''}`,
         editorCheckCallback: editorCheckCallbackFor(size),
-      });
+      })
     }
-    await this.loadSettings();
-    this.addSettingTab(new ImgurPluginSettingsTab(this.app, this));
-    this.setupImgurHandlers();
-    this.setupImagesUploader();
+    await this.loadSettings()
+    this.addSettingTab(new ImgurPluginSettingsTab(this.app, this))
+    this.setupImgurHandlers()
+    this.setupImagesUploader()
   }
 
   setupImagesUploader(): void {
-    this.imgUploaderField = buildUploaderFrom(this.settings);
+    this.imgUploaderField = buildUploaderFrom(this.settings)
   }
 
   private setupImgurHandlers() {
-    this.registerEvent(
-      this.app.workspace.on("editor-paste", this.customPasteEventCallback)
-    );
-    this.registerEvent(
-      this.app.workspace.on("editor-drop", this.customDropEventListener)
-    );
+    this.registerEvent(this.app.workspace.on('editor-paste', this.customPasteEventCallback))
+    this.registerEvent(this.app.workspace.on('editor-drop', this.customDropEventListener))
   }
 
   private static showUnconfiguredPluginNotice() {
-    const fiveSecondsMillis = 5_000;
+    const fiveSecondsMillis = 5_000
     // eslint-disable-next-line no-new
-    new Notice(
-      "⚠️ Please configure Imgur plugin or disable it",
-      fiveSecondsMillis
-    );
+    new Notice('⚠️ Please configure Imgur plugin or disable it', fiveSecondsMillis)
   }
 
   private async uploadFileAndEmbedImgurImage(file: File) {
-    const pasteId = (Math.random() + 1).toString(36).substr(2, 5);
-    this.insertTemporaryText(pasteId);
+    const pasteId = (Math.random() + 1).toString(36).substr(2, 5)
+    this.insertTemporaryText(pasteId)
 
-    let imgUrl: string;
+    let imgUrl: string
     try {
-      imgUrl = await this.imgUploaderField.upload(file);
+      imgUrl = await this.imgUploaderField.upload(file)
     } catch (e) {
       if (e instanceof ApiError) {
         this.handleFailedUpload(
           pasteId,
-          `Upload failed, remote server returned an error: ${e.message}`
-        );
+          `Upload failed, remote server returned an error: ${e.message}`,
+        )
       } else {
         // eslint-disable-next-line no-console
-        console.error("Failed imgur request: ", e);
-        this.handleFailedUpload(
-          pasteId,
-          "⚠️Imgur upload failed, check dev console"
-        );
+        console.error('Failed imgur request: ', e)
+        this.handleFailedUpload(pasteId, '⚠️Imgur upload failed, check dev console')
       }
-      throw e;
+      throw e
     }
-    this.embedMarkDownImage(pasteId, imgUrl);
+    this.embedMarkDownImage(pasteId, imgUrl)
   }
 
   private insertTemporaryText(pasteId: string) {
-    const progressText = ImgurPlugin.progressTextFor(pasteId);
-    this.getEditor().replaceSelection(`${progressText}\n`);
+    const progressText = ImgurPlugin.progressTextFor(pasteId)
+    this.getEditor().replaceSelection(`${progressText}\n`)
   }
 
   private static progressTextFor(id: string) {
-    return `![Uploading file...${id}]()`;
+    return `![Uploading file...${id}]()`
   }
 
   private embedMarkDownImage(pasteId: string, imageUrl: string) {
-    const progressText = ImgurPlugin.progressTextFor(pasteId);
-    const markDownImage = `![](${imageUrl})`;
+    const progressText = ImgurPlugin.progressTextFor(pasteId)
+    const markDownImage = `![](${imageUrl})`
 
-    ImgurPlugin.replaceFirstOccurrence(
-      this.getEditor(),
-      progressText,
-      markDownImage
-    );
+    ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, markDownImage)
   }
 
   private handleFailedUpload(pasteId: string, message: string) {
-    const progressText = ImgurPlugin.progressTextFor(pasteId);
-    ImgurPlugin.replaceFirstOccurrence(
-      this.getEditor(),
-      progressText,
-      `<!--${message}-->`
-    );
+    const progressText = ImgurPlugin.progressTextFor(pasteId)
+    ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, `<!--${message}-->`)
   }
 
   private getEditor(): Editor {
-    const mdView = this.app.workspace.activeLeaf.view as MarkdownView;
-    return mdView.editor;
+    const mdView = this.app.workspace.activeLeaf.view as MarkdownView
+    return mdView.editor
   }
 
-  private static replaceFirstOccurrence(
-    editor: Editor,
-    target: string,
-    replacement: string
-  ) {
-    const lines = editor.getValue().split("\n");
+  private static replaceFirstOccurrence(editor: Editor, target: string, replacement: string) {
+    const lines = editor.getValue().split('\n')
     for (let i = 0; i < lines.length; i += 1) {
-      const ch = lines[i].indexOf(target);
+      const ch = lines[i].indexOf(target)
       if (ch !== -1) {
-        const from = { line: i, ch };
-        const to = { line: i, ch: ch + target.length };
-        editor.replaceRange(replacement, from, to);
-        break;
+        const from = { line: i, ch }
+        const to = { line: i, ch: ch + target.length }
+        editor.replaceRange(replacement, from, to)
+        break
       }
     }
   }
