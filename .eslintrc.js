@@ -27,5 +27,21 @@ module.exports = {
         'import/no-extraneous-dependencies': airbnbNoExtraDepsRule,
       },
     },
+    {
+      files: ['.eslintrc.js', 'esbuild.config.mjs'],
+      env: {
+        node: true,
+      },
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      rules: {
+        'import/no-extraneous-dependencies': [
+          'error',
+          { devDependencies: ['.eslintrc.js', 'esbuild.config.mjs'] },
+        ],
+      },
+    },
   ],
 }
