@@ -208,7 +208,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private async uploadFileAndEmbedImgurImage(file: File) {
-    const pasteId = (Math.random() + 1).toString(36).substr(2, 5)
+    const pasteId = (Math.random() + 1).toString(36).substring(2, 5)
     this.insertTemporaryText(pasteId)
 
     let imgUrl: string
