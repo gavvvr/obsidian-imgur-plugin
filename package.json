@@ -33,6 +33,7 @@
     "esbuild": "^0.17.18",
     "eslint": "^8.39.0",
     "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-deprecation": "^1.4.1",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.2",
     "obsidian": "^1.2.8",

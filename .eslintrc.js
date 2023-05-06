@@ -10,7 +10,7 @@ module.exports = {
         project: true,
         tsconfigRootDir: __dirname,
       },
-      plugins: ['@typescript-eslint'],
+      plugins: ['@typescript-eslint', 'deprecation'],
       extends: [
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
@@ -18,6 +18,7 @@ module.exports = {
         'prettier',
       ],
       rules: {
+        'deprecation/deprecation': 'warn',
         '@typescript-eslint/no-explicit-any': 'off',
       },
     },
