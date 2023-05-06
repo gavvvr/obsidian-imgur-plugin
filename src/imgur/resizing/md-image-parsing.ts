@@ -1,7 +1,7 @@
 import MarkdownImagePieces, { mdImagePiecesFrom } from './MarkdownImagePieces'
 
 const imgurImageRegexp =
-  /(\[)?(!\[[^[\]]*\]\()(https?:\/\/(?:i\.)?imgur\.com\/)(\w+)\.(png|jpe?g|gif)\)(]\(https?:\/\/(?:i\.)?imgur\.com\/\w+\.(?:png|jpe?g|gif)\))?/gm
+  /(\[)?(!\[[^[\]]*]\()(https?:\/\/(?:i\.)?imgur\.com\/)(\w+)\.(png|jpe?g|gif)\)(]\(https?:\/\/(?:i\.)?imgur\.com\/\w+\.(?:png|jpe?g|gif)\))?/gm
 
 const parseImgurImages = (line: string): IterableIterator<RegExpMatchArray> =>
   line.matchAll(imgurImageRegexp)
