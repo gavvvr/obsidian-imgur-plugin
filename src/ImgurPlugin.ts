@@ -251,7 +251,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private getEditor(): Editor {
-    const mdView = this.app.workspace.activeLeaf.view as MarkdownView
+    const mdView = this.app.workspace.getActiveViewOfType(MarkdownView)
     return mdView.editor
   }
 
