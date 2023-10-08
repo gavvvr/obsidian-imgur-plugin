@@ -208,7 +208,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private async uploadFileAndEmbedImgurImage(file: File) {
-    const pasteId = (Math.random() + 1).toString(36).substr(2, 5)
+    const pasteId = (Math.random() + 1).toString(36).substring(2, 7)
     this.insertTemporaryText(pasteId)
 
     let imgUrl: string
@@ -251,7 +251,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private getEditor(): Editor {
-    const mdView = this.app.workspace.activeLeaf.view as MarkdownView
+    const mdView = this.app.workspace.getActiveViewOfType(MarkdownView)
     return mdView.editor
   }
 
