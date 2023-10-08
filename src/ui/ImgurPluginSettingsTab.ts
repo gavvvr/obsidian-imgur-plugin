@@ -8,8 +8,8 @@ import ImgurAuthenticationStatusItem from './ImgurAuthenticationStatus'
 const REGISTER_CLIENT_URL = 'https://api.imgur.com/oauth2/addclient'
 
 export default class ImgurPluginSettingsTab extends PluginSettingTab {
-  plugin: ImgurPlugin
-  settings: ImgurPluginSettings
+  readonly plugin: ImgurPlugin
+  readonly settings: ImgurPluginSettings
 
   authModal?: ImgurAuthModal
 
