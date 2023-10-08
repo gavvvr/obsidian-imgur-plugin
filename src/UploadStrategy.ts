@@ -1,18 +1,8 @@
-export default class UploadStrategy {
-  private static readonly valuesArr: UploadStrategy[] = []
+export type UploadStrategy = 'ANONYMOUS_IMGUR' | 'AUTHENTICATED_IMGUR'
 
-  static get values(): ReadonlyArray<UploadStrategy> {
-    return this.valuesArr
-  }
+export type StrategyAndDescription = Record<UploadStrategy, string>
 
-  static readonly ANONYMOUS_IMGUR = new UploadStrategy('ANONYMOUS_IMGUR', 'Anonymous Imgur upload')
-
-  static readonly AUTHENTICATED_IMGUR = new UploadStrategy(
-    'AUTHENTICATED_IMGUR',
-    'Authenticated Imgur upload',
-  )
-
-  private constructor(readonly id: string, readonly description: string) {
-    UploadStrategy.valuesArr.push(this)
-  }
+export const UploadStrategies: StrategyAndDescription = {
+  ANONYMOUS_IMGUR: 'Anonymous Imgur upload',
+  AUTHENTICATED_IMGUR: 'Authenticated Imgur upload',
 }

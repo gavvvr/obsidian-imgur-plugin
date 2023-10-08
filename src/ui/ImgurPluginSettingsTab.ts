@@ -1,9 +1,9 @@
 import { App, Notice, PluginSettingTab, Setting } from 'obsidian'
 import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from 'src/imgur/constants'
 import ImgurPlugin, { ImgurPluginSettings } from '../ImgurPlugin'
-import UploadStrategy from '../UploadStrategy'
 import ImgurAuthModal from './ImgurAuthModal'
 import ImgurAuthenticationStatusItem from './ImgurAuthenticationStatus'
+import { UploadStrategies, UploadStrategy } from 'src/UploadStrategy'
 
 const REGISTER_CLIENT_URL = 'https://api.imgur.com/oauth2/addclient'
 
@@ -53,11 +53,12 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     this.strategyDiv = containerEl.createDiv()
 
     new Setting(uploadApproachDiv).setName('Images upload approach').addDropdown((dropdown) => {
-      UploadStrategy.values.forEach((s) => {
-        dropdown.addOption(s.id, s.description)
-      })
+      for (const key in UploadStrategies) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        dropdown.addOption(key, UploadStrategies[key])
+      }
       dropdown.setValue(this.settings.uploadStrategy)
-      dropdown.onChange(async (v) => {
+      dropdown.onChange(async (v: UploadStrategy) => {
         this.settings.uploadStrategy = v
         this.plugin.setupImagesUploader()
         await this.drawSettings(this.strategyDiv)
@@ -81,15 +82,13 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
 
   private async drawSettings(parentEl: HTMLElement) {
     parentEl.empty()
-    switch (this.settings.uploadStrategy) {
-      case UploadStrategy.ANONYMOUS_IMGUR.id:
-        this.drawAnonymousClientIdSetting(parentEl)
-        break
-      case UploadStrategy.AUTHENTICATED_IMGUR.id:
-        await new ImgurAuthenticationStatusItem(parentEl, this).display()
-        break
-      default:
-        throw new Error('There must be a bug, this code is not expected to be reached')
+    if (this.settings.uploadStrategy === 'ANONYMOUS_IMGUR') {
+      this.drawAnonymousClientIdSetting(parentEl)
+    } else if (this.settings.uploadStrategy === 'AUTHENTICATED_IMGUR') {
+      await new ImgurAuthenticationStatusItem(parentEl, this).display()
+    } else {
+      const _: never = this.settings.uploadStrategy
+      return
     }
   }
 

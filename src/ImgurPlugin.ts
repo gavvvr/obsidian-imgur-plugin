@@ -2,13 +2,13 @@ import { Editor, MarkdownView, Notice, Plugin } from 'obsidian'
 import ImageUploader from './uploader/ImageUploader'
 import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
 import ApiError from './uploader/ApiError'
-import UploadStrategy from './UploadStrategy'
 import buildUploaderFrom from './uploader/imgUploaderFactory'
 import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
 import PasteEventCopy from './aux-event-classes/PasteEventCopy'
 import DragEventCopy from './aux-event-classes/DragEventCopy'
 import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
 import ImgurSize from './imgur/resizing/ImgurSize'
+import { UploadStrategy } from './UploadStrategy'
 
 declare module 'obsidian' {
   interface MarkdownSubView {
@@ -22,13 +22,13 @@ interface ClipboardManager {
 }
 
 export interface ImgurPluginSettings {
-  uploadStrategy: string
+  uploadStrategy: UploadStrategy
   clientId: string
   showRemoteUploadConfirmation: boolean
 }
 
 const DEFAULT_SETTINGS: ImgurPluginSettings = {
-  uploadStrategy: UploadStrategy.ANONYMOUS_IMGUR.id,
+  uploadStrategy: 'ANONYMOUS_IMGUR',
   clientId: null,
   showRemoteUploadConfirmation: true,
 }
