@@ -49,7 +49,6 @@ export default class ImgurAuthModal extends Modal {
   async onClose(): Promise<void> {
     clearInterval(this.intervalId)
     this.opened = false
-    // console.log(this.afterClose);
     if (this.afterClose) await this.afterClose()
   }
 
