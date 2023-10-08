@@ -1,6 +1,6 @@
 import { App, Notice, PluginSettingTab, Setting } from 'obsidian'
 import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from 'src/imgur/constants'
-import ImgurPlugin from '../ImgurPlugin'
+import ImgurPlugin, { ImgurPluginSettings } from '../ImgurPlugin'
 import UploadStrategy from '../UploadStrategy'
 import ImgurAuthModal from './ImgurAuthModal'
 import ImgurAuthenticationStatusItem from './ImgurAuthenticationStatus'
@@ -9,6 +9,7 @@ const REGISTER_CLIENT_URL = 'https://api.imgur.com/oauth2/addclient'
 
 export default class ImgurPluginSettingsTab extends PluginSettingTab {
   plugin: ImgurPlugin
+  settings: ImgurPluginSettings
 
   authModal?: ImgurAuthModal
 
@@ -17,6 +18,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
   constructor(app: App, plugin: ImgurPlugin) {
     super(app, plugin)
     this.plugin = plugin
+    this.settings = plugin.settings
 
     this.plugin.registerObsidianProtocolHandler('imgur-oauth', (params) => {
       if (!this.authModal || !this.authModal.isOpen) return
@@ -54,9 +56,9 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
       UploadStrategy.values.forEach((s) => {
         dropdown.addOption(s.id, s.description)
       })
-      dropdown.setValue(this.plugin.settings.uploadStrategy)
+      dropdown.setValue(this.settings.uploadStrategy)
       dropdown.onChange(async (v) => {
-        this.plugin.settings.uploadStrategy = v
+        this.settings.uploadStrategy = v
         this.plugin.setupImagesUploader()
         await this.drawSettings(this.strategyDiv)
       })
@@ -65,9 +67,9 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     void this.drawSettings(this.strategyDiv)
 
     new Setting(containerEl).setName('Confirm before upload').addToggle((t) => {
-      t.setValue(this.plugin.settings.showRemoteUploadConfirmation)
+      t.setValue(this.settings.showRemoteUploadConfirmation)
       t.onChange((newValue) => {
-        this.plugin.settings.showRemoteUploadConfirmation = newValue
+        this.settings.showRemoteUploadConfirmation = newValue
       })
     })
   }
@@ -79,7 +81,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
 
   private async drawSettings(parentEl: HTMLElement) {
     parentEl.empty()
-    switch (this.plugin.settings.uploadStrategy) {
+    switch (this.settings.uploadStrategy) {
       case UploadStrategy.ANONYMOUS_IMGUR.id:
         this.drawAnonymousClientIdSetting(parentEl)
         break
@@ -101,9 +103,9 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
       .addText((text) =>
         text
           .setPlaceholder('Enter your client_id')
-          .setValue(this.plugin.settings.clientId)
+          .setValue(this.settings.clientId)
           .onChange((value) => {
-            this.plugin.settings.clientId = value
+            this.settings.clientId = value
           }),
       )
   }
