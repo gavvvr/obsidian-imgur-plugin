@@ -179,8 +179,7 @@ export default class ImgurPlugin extends Plugin {
 
   async onload(): Promise<void> {
     const sizes = ImgurSize.values()
-    for (let i = 0; i < sizes.length; i += 1) {
-      const size = sizes[i]
+    for (const size of sizes) {
       this.addCommand({
         id: `imgur-resize-${size.suffix}-command`,
         name: `Resize to ${size.description}${size.sizeHint ? ` (${size.sizeHint})` : ''}`,
