@@ -8,7 +8,7 @@ export async function handleImgurErrorResponse(resp: Response): Promise<void> {
   }
   throw new Error(await resp.text())
 }
-export default class ImgurClient {
+export default class AuthenticatedImgurClient {
   private readonly accessToken!: string
 
   constructor(accessToken: string) {

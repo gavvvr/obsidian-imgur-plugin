@@ -1,5 +1,5 @@
 import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY, IMGUR_PLUGIN_CLIENT_ID } from 'src/imgur/constants'
-import ImgurClient from 'src/imgur/ImgurClient'
+import AuthenticatedImgurClient from 'src/imgur/AuthenticatedImgurClient'
 import { ImgurPluginSettings } from 'src/ImgurPlugin'
 import UploadStrategy from 'src/UploadStrategy'
 import ImageUploader from './ImageUploader'
@@ -20,7 +20,7 @@ export default function buildUploaderFrom(
       return undefined
     }
 
-    return new ImgurAuthenticatedUploader(new ImgurClient(accessToken))
+    return new ImgurAuthenticatedUploader(new AuthenticatedImgurClient(accessToken))
   }
   if (settings.uploadStrategy === UploadStrategy.ANONYMOUS_IMGUR.id) {
     if (settings.clientId) {

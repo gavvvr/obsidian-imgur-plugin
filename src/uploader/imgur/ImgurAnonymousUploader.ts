@@ -1,7 +1,7 @@
 import { IMGUR_API_BASE } from 'src/imgur/constants'
 import { ImgurPostData } from '../../imgur/imgurResponseTypes'
 import ImageUploader from '../ImageUploader'
-import { handleImgurErrorResponse } from '../../imgur/ImgurClient'
+import { handleImgurErrorResponse } from '../../imgur/AuthenticatedImgurClient'
 
 export default class ImgurAnonymousUploader implements ImageUploader {
   private readonly clientId!: string

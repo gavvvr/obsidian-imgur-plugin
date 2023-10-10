@@ -1,8 +1,8 @@
-import ImgurClient from '../../imgur/ImgurClient'
+import AuthenticatedImgurClient from '../../imgur/AuthenticatedImgurClient'
 import ImageUploader from '../ImageUploader'
 
 export default class ImgurAuthenticatedUploader implements ImageUploader {
-  constructor(readonly client: ImgurClient) {}
+  constructor(readonly client: AuthenticatedImgurClient) {}
 
   async upload(image: File): Promise<string> {
     return (await this.client.upload(image)).data.link
