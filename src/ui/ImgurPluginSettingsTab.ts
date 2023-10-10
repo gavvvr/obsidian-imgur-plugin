@@ -1,9 +1,10 @@
 import { App, Notice, PluginSettingTab, Setting } from 'obsidian'
-import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from 'src/imgur/constants'
+import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY, IMGUR_PLUGIN_CLIENT_ID } from 'src/imgur/constants'
 import ImgurPlugin from '../ImgurPlugin'
 import UploadStrategy from '../UploadStrategy'
 import ImgurAuthModal from './ImgurAuthModal'
 import ImgurAuthenticationStatusItem from './ImgurAuthenticationStatus'
+import ApiError from 'src/uploader/ApiError'
 
 const REGISTER_CLIENT_URL = 'https://api.imgur.com/oauth2/addclient'
 
@@ -13,6 +14,8 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
   authModal?: ImgurAuthModal
 
   strategyDiv?: HTMLDivElement
+
+  authElem?: ImgurAuthenticationStatusItem
 
   constructor(app: App, plugin: ImgurPlugin) {
     super(app, plugin)
@@ -84,7 +87,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
         this.drawAnonymousClientIdSetting(parentEl)
         break
       case UploadStrategy.AUTHENTICATED_IMGUR.id:
-        await new ImgurAuthenticationStatusItem(parentEl, this).display()
+        await this.createAuthenticationInfoBlock(parentEl)
         break
       default:
         throw new Error('There must be a bug, this code is not expected to be reached')
@@ -116,5 +119,46 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     fragment.append('Generate your own Client ID at ')
     fragment.append(a)
     return fragment
+  }
+
+  private async createAuthenticationInfoBlock(parentEl: HTMLElement) {
+    this.authElem = new ImgurAuthenticationStatusItem(parentEl)
+    await this.drawAuthenticationInfo()
+    this.authElem.authButtonClick = () => {
+      const modal = new ImgurAuthModal(IMGUR_PLUGIN_CLIENT_ID, this.app, async () => {
+        await this.drawAuthenticationInfo()
+      })
+      modal.open()
+      this.authModal = modal
+    }
+    this.authElem.logoutButtonClick = async () => {
+      localStorage.removeItem(IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY)
+
+      this.plugin.setupImagesUploader()
+      await this.drawAuthenticationInfo()
+    }
+  }
+
+  private async drawAuthenticationInfo() {
+    const authenticatedClient = this.plugin.getAuthenticatedImgurClient()
+    if (!authenticatedClient) {
+      this.authElem.setNotAuthenticated()
+      return
+    }
+
+    this.authElem.setStatusChecking()
+    try {
+      const authenticatedUserName = (await authenticatedClient.accountInfo()).data.url
+      this.authElem.setAuthenticatedAs(authenticatedUserName)
+    } catch (e) {
+      if (e instanceof TypeError && e.message === 'Failed to fetch') {
+        this.authElem.setInternetConnectionProblem()
+      } else if (e instanceof ApiError) {
+        this.authElem.setImgurSessionError(e.message)
+      } else {
+        console.warn('Not authenticated, exception: ', e)
+        this.authElem.setNotAuthenticatedWithError()
+      }
+    }
   }
 }

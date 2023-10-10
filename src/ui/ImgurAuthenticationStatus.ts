@@ -1,22 +1,13 @@
 import { ButtonComponent } from 'obsidian'
-import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY, IMGUR_PLUGIN_CLIENT_ID } from 'src/imgur/constants'
-import ApiError from 'src/uploader/ApiError'
-import ImgurAuthModal from './ImgurAuthModal'
-import ImgurPluginSettingsTab from './ImgurPluginSettingsTab'
 
 export default class ImgurAuthenticationStatus {
-  private authenticated: boolean
-
   private authStatusDiv: HTMLDivElement
-
   private buttonsDiv: HTMLDivElement
 
-  constructor(
-    private readonly parent: HTMLElement,
-    private readonly settingsTab: ImgurPluginSettingsTab,
-  ) {}
+  authButtonClick: (evt: MouseEvent) => void
+  logoutButtonClick: (evt: MouseEvent) => Promise<void>
 
-  async display(): Promise<void> {
+  constructor(private readonly parent: HTMLElement) {
     const settingItem = this.parent.createDiv()
     settingItem.addClass('setting-item')
     const settingItemInfo = settingItem.createDiv()
@@ -27,76 +18,58 @@ export default class ImgurAuthenticationStatus {
 
     this.authStatusDiv = settingItemInfo.createDiv()
     this.buttonsDiv = settingItemControl
-
-    await this.updateAll()
   }
 
-  private async updateAll() {
+  setNotAuthenticated() {
+    this.clear()
+    this.authStatusDiv.setText('Not authenticated')
+    this.addAuthButton()
+  }
+
+  setStatusChecking() {
+    this.clear()
+    this.authStatusDiv.setText('Checking Imgur authentication...')
+  }
+
+  setAuthenticatedAs(currentUser: string) {
+    this.clear()
+    this.authStatusDiv.setText(`Authenticated as: ${currentUser} ✅`)
+    this.addLogoutButton()
+  }
+
+  setInternetConnectionProblem() {
+    this.clear()
+    this.authStatusDiv.setText('Internet connection problem')
+  }
+
+  setImgurSessionError(sessionError: string) {
+    this.clear()
+    this.authStatusDiv.setText(`Imgur session error: ${sessionError}`)
+    this.addAuthButton()
+  }
+
+  setNotAuthenticatedWithError() {
+    this.clear()
+    this.authStatusDiv.setText('⚠️ Not authenticated. See console for error')
+    this.addAuthButton()
+  }
+
+  private clear() {
     this.authStatusDiv.empty()
     this.buttonsDiv.empty()
-    await this.updateStatus()
-    this.drawButtons()
   }
 
-  private async updateStatus() {
-    const imgurClient = this.settingsTab.plugin.getAuthenticatedImgurClient()
-    if (!imgurClient) {
-      this.setNotAuthenticated()
-      return
-    }
-
-    this.authStatusDiv.setText('Checking Imgur authentication...')
-    try {
-      const currentUserName = (await imgurClient.accountInfo()).data.url
-      this.authStatusDiv.setText(`Authenticated as: ${currentUserName} ✅`)
-      this.authenticated = true
-    } catch (e) {
-      if (e instanceof TypeError && e.message === 'Failed to fetch') {
-        this.authStatusDiv.setText('Internet connection problem')
-      } else if (e instanceof ApiError) {
-        this.authStatusDiv.setText(`Imgur session error: ${e.message}`)
-      } else {
-        console.warn('Not authenticated, exception: ', e)
-        this.setNotAuthenticated()
-      }
-    }
-  }
-
-  private setNotAuthenticated() {
-    this.authStatusDiv.setText('Not authenticated')
-    this.authenticated = false
-  }
-
-  private drawButtons() {
-    if (this.authenticated) {
-      this.addLogoutButton(this.buttonsDiv)
-    } else {
-      this.addAuthButton(this.buttonsDiv)
-    }
-  }
-
-  private addLogoutButton(el: HTMLElement) {
-    new ButtonComponent(el)
+  private addLogoutButton() {
+    new ButtonComponent(this.buttonsDiv)
       .setButtonText('Logout')
       .setWarning()
-      .onClick(async () => {
-        localStorage.removeItem(IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY)
-
-        this.settingsTab.plugin.setupImagesUploader()
-        await this.updateAll()
-      })
+      .onClick((e) => this.logoutButtonClick(e))
   }
 
-  private addAuthButton(parentEl: HTMLElement) {
-    new ButtonComponent(parentEl)
+  private addAuthButton() {
+    new ButtonComponent(this.buttonsDiv)
       .setButtonText('Authenticate')
       .setCta()
-      .onClick(() => {
-        const modal = new ImgurAuthModal(IMGUR_PLUGIN_CLIENT_ID, this.settingsTab.app, async () => {
-          await this.updateAll()
-        })
-        modal.open()
-        this.settingsTab.authModal = modal
-      })
+      .onClick((e) => this.authButtonClick(e))
   }
 }
