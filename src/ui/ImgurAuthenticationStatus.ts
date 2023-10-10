@@ -1,7 +1,6 @@
 import { ButtonComponent } from 'obsidian'
 import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY, IMGUR_PLUGIN_CLIENT_ID } from 'src/imgur/constants'
 import ApiError from 'src/uploader/ApiError'
-import ImgurAuthenticatedUploader from 'src/uploader/imgur/ImgurAuthenticatedUploader'
 import ImgurAuthModal from './ImgurAuthModal'
 import ImgurPluginSettingsTab from './ImgurPluginSettingsTab'
 
@@ -40,15 +39,15 @@ export default class ImgurAuthenticationStatus {
   }
 
   private async updateStatus() {
-    const uploader = this.getAuthenticatedUploader()
-    if (!uploader) {
+    const imgurClient = this.settingsTab.plugin.getAuthenticatedImgurClient()
+    if (!imgurClient) {
       this.setNotAuthenticated()
       return
     }
 
     this.authStatusDiv.setText('Checking Imgur authentication...')
     try {
-      const currentUserName = (await uploader.client.accountInfo()).data.url
+      const currentUserName = (await imgurClient.accountInfo()).data.url
       this.authStatusDiv.setText(`Authenticated as: ${currentUserName} ✅`)
       this.authenticated = true
     } catch (e) {
@@ -61,17 +60,6 @@ export default class ImgurAuthenticationStatus {
         this.setNotAuthenticated()
       }
     }
-  }
-
-  private getAuthenticatedUploader(): ImgurAuthenticatedUploader | null {
-    if (
-      this.settingsTab.plugin.imgUploader &&
-      this.settingsTab.plugin.imgUploader instanceof ImgurAuthenticatedUploader
-    ) {
-      return this.settingsTab.plugin.imgUploader
-    }
-
-    return null
   }
 
   private setNotAuthenticated() {

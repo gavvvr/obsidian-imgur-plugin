@@ -9,6 +9,8 @@ import PasteEventCopy from './aux-event-classes/PasteEventCopy'
 import DragEventCopy from './aux-event-classes/DragEventCopy'
 import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
 import ImgurSize from './imgur/resizing/ImgurSize'
+import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
+import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
 
 declare module 'obsidian' {
   interface MarkdownSubView {
@@ -194,6 +196,14 @@ export default class ImgurPlugin extends Plugin {
 
   setupImagesUploader(): void {
     this.imgUploaderField = buildUploaderFrom(this.settings)
+  }
+
+  getAuthenticatedImgurClient(): AuthenticatedImgurClient | null {
+    if (this.imgUploader instanceof ImgurAuthenticatedUploader) {
+      return this.imgUploader.client
+    }
+
+    return null
   }
 
   private setupImgurHandlers() {
