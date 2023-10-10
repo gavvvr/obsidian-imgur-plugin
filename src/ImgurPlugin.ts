@@ -27,12 +27,14 @@ export interface ImgurPluginSettings {
   uploadStrategy: string
   clientId: string
   showRemoteUploadConfirmation: boolean
+  albumToUpload: string | undefined
 }
 
 const DEFAULT_SETTINGS: ImgurPluginSettings = {
   uploadStrategy: UploadStrategy.ANONYMOUS_IMGUR.id,
   clientId: null,
   showRemoteUploadConfirmation: true,
+  albumToUpload: undefined,
 }
 
 function allFilesAreImages(files: FileList) {
@@ -222,7 +224,7 @@ export default class ImgurPlugin extends Plugin {
 
     let imgUrl: string
     try {
-      imgUrl = await this.imgUploaderField.upload(file)
+      imgUrl = await this.imgUploaderField.upload(file, this.settings.albumToUpload)
     } catch (e) {
       if (e instanceof ApiError) {
         this.handleFailedUpload(

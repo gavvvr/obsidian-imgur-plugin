@@ -1,10 +1,11 @@
-import { App, Notice, PluginSettingTab, Setting } from 'obsidian'
+import { App, DropdownComponent, Notice, PluginSettingTab, Setting } from 'obsidian'
 import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY, IMGUR_PLUGIN_CLIENT_ID } from 'src/imgur/constants'
 import ImgurPlugin from '../ImgurPlugin'
 import UploadStrategy from '../UploadStrategy'
 import ImgurAuthModal from './ImgurAuthModal'
 import ImgurAuthenticationStatusItem from './ImgurAuthenticationStatus'
 import ApiError from 'src/uploader/ApiError'
+import { NewAlbumModal } from './NewAlbumModal'
 
 const REGISTER_CLIENT_URL = 'https://api.imgur.com/oauth2/addclient'
 
@@ -16,6 +17,8 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
   strategyDiv?: HTMLDivElement
 
   authElem?: ImgurAuthenticationStatusItem
+
+  authenticatedUserName?: string = undefined
 
   constructor(app: App, plugin: ImgurPlugin) {
     super(app, plugin)
@@ -88,6 +91,8 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
         break
       case UploadStrategy.AUTHENTICATED_IMGUR.id:
         await this.createAuthenticationInfoBlock(parentEl)
+
+        if (this.authenticatedUserName) this.drawAlbumSettings(parentEl)
         break
       default:
         throw new Error('There must be a bug, this code is not expected to be reached')
@@ -148,8 +153,8 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
 
     this.authElem.setStatusChecking()
     try {
-      const authenticatedUserName = (await authenticatedClient.accountInfo()).data.url
-      this.authElem.setAuthenticatedAs(authenticatedUserName)
+      this.authenticatedUserName = (await authenticatedClient.accountInfo()).data.url
+      this.authElem.setAuthenticatedAs(this.authenticatedUserName)
     } catch (e) {
       if (e instanceof TypeError && e.message === 'Failed to fetch') {
         this.authElem.setInternetConnectionProblem()
@@ -160,5 +165,86 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
         this.authElem.setNotAuthenticatedWithError()
       }
     }
+  }
+
+  private drawAlbumSettings(parentEl: HTMLElement) {
+    const albumSetting = new Setting(parentEl)
+    this.addAlbumsManagerLink(albumSetting.descEl, this.authenticatedUserName)
+    albumSetting.setName('Album to upload').addDropdown(async (d) => {
+      d.setDisabled(true)
+      d.addOption('', 'Loading...')
+      await this.populateList(d)
+      d.selectEl.options.remove(0)
+      d.setDisabled(false)
+
+      d.onChange((value) => {
+        if (value === '＋') {
+          const handler = async (name: string, description?: string) => {
+            const client = this.plugin.getAuthenticatedImgurClient()
+            try {
+              const resp = await client.createNewAlbum(name, description)
+              if (resp.success === true) {
+                await this.populateList(d)
+                d.setValue(resp.data.id)
+                d.selectEl.removeClass('mod-warning')
+                this.plugin.settings.albumToUpload = resp.data.id
+              }
+            } catch (e) {
+              new Notice('Failed to create new album. Open console to see log')
+              console.error('Failed to create a new album', e)
+            }
+          }
+          const modal = new NewAlbumModal(this.app)
+          modal.createButtonHandler = handler
+          modal.open()
+          return
+        }
+        if (value === 'null') {
+          this.plugin.settings.albumToUpload = undefined
+        } else {
+          this.plugin.settings.albumToUpload = value
+        }
+        for (const opt of Array.from(d.selectEl.options)) {
+          if (opt.value === value) {
+            if (opt.innerText.contains('⚠️')) {
+              d.selectEl.addClass('mod-warning')
+            } else {
+              d.selectEl.removeClass('mod-warning')
+            }
+          }
+        }
+      })
+    })
+  }
+
+  private addAlbumsManagerLink(element: HTMLElement, loggedInUser: string) {
+    const link = `https://${loggedInUser}.imgur.com/all`
+    const linkEl = createEl('a', { href: link, text: link })
+    element.appendText('Manage your albums at ')
+    element.append(linkEl)
+  }
+
+  private async populateList(d: DropdownComponent) {
+    const client = this.plugin.getAuthenticatedImgurClient()
+    const albums = (await client.listAlbums()).data
+
+    albums.sort((a1, a2) => a1.datetime - a2.datetime)
+
+    d.addOption(null, 'Not specified')
+    d.addOption('＋', '＋ Create new album')
+    for (const album of albums) {
+      d.addOption(album.id, album.title)
+    }
+
+    const currentlyChosenAlbum = this.plugin.settings.albumToUpload
+
+    if (currentlyChosenAlbum != undefined && !albums.some((a) => a.id === currentlyChosenAlbum)) {
+      d.addOption(
+        currentlyChosenAlbum,
+        `id: ${currentlyChosenAlbum} (⚠️ album not found at imgur.com)`,
+      )
+      d.selectEl.addClass('mod-warning')
+    }
+    d.setValue(currentlyChosenAlbum)
   }
 }

@@ -52,3 +52,22 @@ export type ImgurPostData = {
     has_sound: boolean
   }
 }
+
+export type Albums = {
+  success: boolean
+  status: number
+  data: Array<AlbumInfo>
+}
+
+export type AlbumResponse = {
+  success: boolean
+  status: number
+  data: AlbumInfo
+}
+
+export type AlbumInfo = {
+  id: string
+  title: string
+  privacy: 'public' | 'hidden'
+  datetime: number
+}
