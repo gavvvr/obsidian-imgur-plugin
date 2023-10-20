@@ -69,7 +69,9 @@ export default class AuthenticatedImgurClient {
   async createNewAlbum(name: string, description?: string): Promise<AlbumResponse> {
     const requestData = new FormData()
     requestData.append('title', name)
-    requestData.append('description', description)
+    if (description) {
+      requestData.append('description', description)
+    }
 
     const r = await fetch(`${IMGUR_API_BASE}album`, {
       method: 'POST',
