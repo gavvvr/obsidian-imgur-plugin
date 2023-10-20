@@ -7,13 +7,16 @@ import {
   ImgurErrorData,
   ImgurPostData,
 } from './imgurResponseTypes'
+import { RequestUrlResponse, requestUrl } from 'obsidian'
+import prepareMultipartRequestPiece from 'src/utils/obsidian-http-client'
 
-export async function handleImgurErrorResponse(resp: Response): Promise<void> {
-  if (resp.headers.get('Content-Type') === 'application/json') {
-    throw new ApiError(((await resp.json()) as ImgurErrorData).data.error)
+export function handleImgurErrorResponse(resp: RequestUrlResponse): void {
+  if (resp.headers['Content-Type'] === 'application/json') {
+    throw new ApiError((resp.json as ImgurErrorData).data.error)
   }
-  throw new Error(await resp.text())
+  throw new Error(resp.text)
 }
+
 export default class AuthenticatedImgurClient {
   private readonly accessToken!: string
   private authenticatedUser?: string
@@ -26,14 +29,20 @@ export default class AuthenticatedImgurClient {
   }
 
   async accountInfo(): Promise<AccountInfo> {
-    const r = await fetch(`${IMGUR_API_BASE}account/me`, {
-      headers: new Headers({ Authorization: `Bearer ${this.accessToken}` }),
-    })
-    if (!r.ok) {
-      await handleImgurErrorResponse(r)
+    const req = {
+      url: `${IMGUR_API_BASE}account/me`,
+      method: 'GET',
+      headers: { Authorization: `Bearer ${this.accessToken}` },
+      throw: false,
     }
 
-    return (await r.json()) as AccountInfo
+    const resp = await requestUrl(req)
+
+    if (resp.status >= 400) {
+      handleImgurErrorResponse(resp)
+    }
+
+    return resp.json as AccountInfo
   }
 
   async upload(image: File, albumId?: string): Promise<ImgurPostData> {
@@ -43,27 +52,37 @@ export default class AuthenticatedImgurClient {
       requestData.append('album', albumId)
     }
 
-    const resp = await fetch(`${IMGUR_API_BASE}image`, {
+    const request = {
+      url: `${IMGUR_API_BASE}image`,
       method: 'POST',
-      headers: new Headers({ Authorization: `Bearer ${this.accessToken}` }),
-      body: requestData,
-    })
-
-    if (!resp.ok) {
-      await handleImgurErrorResponse(resp)
+      headers: { Authorization: `Bearer ${this.accessToken}` },
+      ...(await prepareMultipartRequestPiece(requestData)),
+      throw: false,
     }
-    return (await resp.json()) as ImgurPostData
+
+    const resp = await requestUrl(request)
+
+    if (resp.status >= 400) {
+      handleImgurErrorResponse(resp)
+    }
+    return resp.json as ImgurPostData
   }
 
   async listAlbums(): Promise<Albums> {
-    const r = await fetch(`${IMGUR_API_BASE}account/${this.authenticatedUser}/albums`, {
-      headers: new Headers({ Authorization: `Bearer ${this.accessToken}` }),
-    })
-    if (!r.ok) {
-      await handleImgurErrorResponse(r)
+    const req = {
+      url: `${IMGUR_API_BASE}account/${this.authenticatedUser}/albums`,
+      method: 'GET',
+      headers: { Authorization: `Bearer ${this.accessToken}` },
+      throw: false,
     }
 
-    return (await r.json()) as Albums
+    const resp = await requestUrl(req)
+
+    if (resp.status >= 400) {
+      handleImgurErrorResponse(resp)
+    }
+
+    return resp.json as Albums
   }
 
   async createNewAlbum(name: string, description?: string): Promise<AlbumResponse> {
@@ -73,15 +92,20 @@ export default class AuthenticatedImgurClient {
       requestData.append('description', description)
     }
 
-    const r = await fetch(`${IMGUR_API_BASE}album`, {
+    const request = {
+      url: `${IMGUR_API_BASE}album`,
       method: 'POST',
-      headers: new Headers({ Authorization: `Bearer ${this.accessToken}` }),
-      body: requestData,
-    })
-    if (!r.ok) {
-      await handleImgurErrorResponse(r)
+      headers: { Authorization: `Bearer ${this.accessToken}` },
+      ...(await prepareMultipartRequestPiece(requestData)),
+      throw: false,
     }
 
-    return (await r.json()) as AlbumResponse
+    const resp = await requestUrl(request)
+
+    if (resp.status >= 400) {
+      handleImgurErrorResponse(resp)
+    }
+
+    return resp.json as AlbumResponse
   }
 }
