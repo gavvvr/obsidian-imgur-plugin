@@ -30,7 +30,7 @@ export default class AuthenticatedImgurClient {
 
   async accountInfo(): Promise<AccountInfo> {
     const req = {
-      url: `${IMGUR_API_BASE}account/me`,
+      url: `${IMGUR_API_BASE}/account/me`,
       method: 'GET',
       headers: { Authorization: `Bearer ${this.accessToken}` },
       throw: false,
@@ -53,7 +53,7 @@ export default class AuthenticatedImgurClient {
     }
 
     const request = {
-      url: `${IMGUR_API_BASE}image`,
+      url: `${IMGUR_API_BASE}/image`,
       method: 'POST',
       headers: { Authorization: `Bearer ${this.accessToken}` },
       ...(await prepareMultipartRequestPiece(requestData)),
@@ -70,7 +70,7 @@ export default class AuthenticatedImgurClient {
 
   async listAlbums(): Promise<Albums> {
     const req = {
-      url: `${IMGUR_API_BASE}account/${this.authenticatedUser}/albums`,
+      url: `${IMGUR_API_BASE}/account/${this.authenticatedUser}/albums`,
       method: 'GET',
       headers: { Authorization: `Bearer ${this.accessToken}` },
       throw: false,
@@ -93,7 +93,7 @@ export default class AuthenticatedImgurClient {
     }
 
     const request = {
-      url: `${IMGUR_API_BASE}album`,
+      url: `${IMGUR_API_BASE}/album`,
       method: 'POST',
       headers: { Authorization: `Bearer ${this.accessToken}` },
       ...(await prepareMultipartRequestPiece(requestData)),

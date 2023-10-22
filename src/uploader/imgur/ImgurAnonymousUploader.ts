@@ -17,7 +17,7 @@ export default class ImgurAnonymousUploader implements ImageUploader {
     requestData.append('image', image)
 
     const request = {
-      url: `${IMGUR_API_BASE}image`,
+      url: `${IMGUR_API_BASE}/image`,
       method: 'POST',
       headers: { Authorization: `Client-ID ${this.clientId}` },
       ...(await prepareMultipartRequestPiece(requestData)),
