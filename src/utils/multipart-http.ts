@@ -25,11 +25,11 @@ function stringToFormDataSection(formName: string, strValue: string): string {
 }
 
 function fileToFormDataSection(formName: string, file: File): Blob {
-  const firstLine = `Content-Disposition: form-data; name="${formName}"; filename="${file.name}"${DOUBLE_LINE_BREAK}`
+  const firstLine = `Content-Disposition: form-data; name="${formName}"; filename="${file.name}"`
   // Normally there should be a Content-Type line, but I have no idea how to easily detect it with vanilla JS.
   // Luckily, Imgur works fine even without this header.
   // const contentType = 'Content-Type: ???'
-  return new Blob([firstLine, file])
+  return new Blob([firstLine, DOUBLE_LINE_BREAK, file])
 }
 
 function composeMultipartBodyFrom(multipartPieces: (string | Blob)[], boundaryLine: string) {
