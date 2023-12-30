@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Notice, Plugin } from 'obsidian'
+import { CanvasView, Editor, MarkdownView, Notice, Plugin } from 'obsidian'
 import ImageUploader from './uploader/ImageUploader'
 import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
 import ApiError from './uploader/ApiError'
@@ -12,10 +12,15 @@ import ImgurSize from './imgur/resizing/ImgurSize'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
 import { allFilesAreImages } from './utils/FileList'
+import { createImgurCanvasPasteHandler } from './Canvas'
 
 declare module 'obsidian' {
   interface MarkdownSubView {
     clipboardManager: ClipboardManager
+  }
+
+  interface CanvasView extends TextFileView {
+    handlePaste: (e: ClipboardEvent) => Promise<void>
   }
 }
 
@@ -42,6 +47,10 @@ export default class ImgurPlugin extends Plugin {
   settings: ImgurPluginSettings
 
   private imgUploaderField: ImageUploader
+
+  getCurrentImagesUploader(): ImageUploader {
+    return this.imgUploaderField
+  }
 
   private customPasteEventCallback = async (
     e: ClipboardEvent,
@@ -188,6 +197,20 @@ export default class ImgurPlugin extends Plugin {
   private setupImgurHandlers() {
     this.registerEvent(this.app.workspace.on('editor-paste', this.customPasteEventCallback))
     this.registerEvent(this.app.workspace.on('editor-drop', this.customDropEventListener))
+    this.registerEvent(
+      this.app.workspace.on('active-leaf-change', (leaf) => {
+        const view = leaf.view
+
+        if (view.getViewType() === 'canvas') {
+          this.overridePasteHandlerForCanvasView(view as CanvasView)
+        }
+      }),
+    )
+  }
+
+  private overridePasteHandlerForCanvasView(view: CanvasView) {
+    const originalPasteFn = view.handlePaste
+    view.handlePaste = createImgurCanvasPasteHandler(this, originalPasteFn)
   }
 
   private addResizingCommands() {
