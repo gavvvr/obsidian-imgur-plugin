@@ -11,6 +11,7 @@ import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
 import ImgurSize from './imgur/resizing/ImgurSize'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
+import { allFilesAreImages } from './utils/FileList'
 
 declare module 'obsidian' {
   interface MarkdownSubView {
@@ -35,16 +36,6 @@ const DEFAULT_SETTINGS: ImgurPluginSettings = {
   clientId: null,
   showRemoteUploadConfirmation: true,
   albumToUpload: undefined,
-}
-
-function allFilesAreImages(files: FileList) {
-  if (files.length === 0) return false
-
-  for (let i = 0; i < files.length; i += 1) {
-    if (!files[i].type.startsWith('image')) return false
-  }
-
-  return true
 }
 
 export default class ImgurPlugin extends Plugin {
