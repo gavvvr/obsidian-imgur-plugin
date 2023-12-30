@@ -173,6 +173,19 @@ export default class ImgurPlugin extends Plugin {
   }
 
   async onload(): Promise<void> {
+    await this.loadSettings()
+    this.addSettingTab(new ImgurPluginSettingsTab(this.app, this))
+
+    this.setupImgurHandlers()
+    this.setupImagesUploader()
+    this.addResizingCommands()
+  }
+
+  setupImagesUploader(): void {
+    this.imgUploaderField = buildUploaderFrom(this.settings)
+  }
+
+  private addResizingCommands() {
     const sizes = ImgurSize.values()
     for (const size of sizes) {
       this.addCommand({
@@ -181,14 +194,6 @@ export default class ImgurPlugin extends Plugin {
         editorCheckCallback: editorCheckCallbackFor(size),
       })
     }
-    await this.loadSettings()
-    this.addSettingTab(new ImgurPluginSettingsTab(this.app, this))
-    this.setupImgurHandlers()
-    this.setupImagesUploader()
-  }
-
-  setupImagesUploader(): void {
-    this.imgUploaderField = buildUploaderFrom(this.settings)
   }
 
   getAuthenticatedImgurClient(): AuthenticatedImgurClient | null {
