@@ -176,13 +176,18 @@ export default class ImgurPlugin extends Plugin {
     await this.loadSettings()
     this.addSettingTab(new ImgurPluginSettingsTab(this.app, this))
 
-    this.setupImgurHandlers()
     this.setupImagesUploader()
+    this.setupImgurHandlers()
     this.addResizingCommands()
   }
 
   setupImagesUploader(): void {
     this.imgUploaderField = buildUploaderFrom(this.settings)
+  }
+
+  private setupImgurHandlers() {
+    this.registerEvent(this.app.workspace.on('editor-paste', this.customPasteEventCallback))
+    this.registerEvent(this.app.workspace.on('editor-drop', this.customDropEventListener))
   }
 
   private addResizingCommands() {
@@ -202,11 +207,6 @@ export default class ImgurPlugin extends Plugin {
     }
 
     return null
-  }
-
-  private setupImgurHandlers() {
-    this.registerEvent(this.app.workspace.on('editor-paste', this.customPasteEventCallback))
-    this.registerEvent(this.app.workspace.on('editor-drop', this.customDropEventListener))
   }
 
   private static showUnconfiguredPluginNotice() {
