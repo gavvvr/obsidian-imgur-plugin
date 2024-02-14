@@ -12,6 +12,7 @@ import ImgurSize from './imgur/resizing/ImgurSize'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
 import { allFilesAreImages } from './utils/FileList'
+import { fixImageTypeIfNeeded } from './utils/misc'
 import { createImgurCanvasPasteHandler } from './Canvas'
 
 declare module 'obsidian' {
@@ -191,7 +192,11 @@ export default class ImgurPlugin extends Plugin {
   }
 
   setupImagesUploader(): void {
-    this.imgUploaderField = buildUploaderFrom(this.settings)
+    const uploader = buildUploaderFrom(this.settings)
+    this.imgUploaderField = {
+      upload: (image: File, albumId?: string) =>
+        uploader.upload(fixImageTypeIfNeeded(image), albumId),
+    }
   }
 
   private setupImgurHandlers() {
