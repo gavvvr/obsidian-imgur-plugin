@@ -193,9 +193,14 @@ export default class ImgurPlugin extends Plugin {
 
   setupImagesUploader(): void {
     const uploader = buildUploaderFrom(this.settings)
-    this.imgUploaderField = {
-      upload: (image: File, albumId?: string) =>
-        uploader.upload(fixImageTypeIfNeeded(image), albumId),
+    this.imgUploaderField = uploader
+    if (!uploader) return
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const originalUploadFunction = uploader.upload
+    uploader.upload = function (image: File, albumId?: string) {
+      if (!uploader) return
+      return originalUploadFunction.call(uploader, fixImageTypeIfNeeded(image), albumId)
     }
   }
 
