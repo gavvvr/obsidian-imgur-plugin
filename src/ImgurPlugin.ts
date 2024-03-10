@@ -13,9 +13,10 @@ import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
 import ApiError from './uploader/ApiError'
 import buildUploaderFrom from './uploader/imgUploaderFactory'
 import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
-import PasteEventCopy from './aux-event-classes/PasteEventCopy'
+
 import { allFilesAreImages } from './utils/FileList'
 import { fixImageTypeIfNeeded } from './utils/misc'
+import PasteEventCopy from './utils/events'
 
 declare module 'obsidian' {
   interface MarkdownSubView {

@@ -1,3 +1,5 @@
+import { RequestUrlResponse, requestUrl } from 'obsidian'
+
 import ApiError from 'src/uploader/ApiError'
 import { IMGUR_API_BASE } from './constants'
 import {
@@ -7,7 +9,6 @@ import {
   ImgurErrorData,
   ImgurPostData,
 } from './imgurResponseTypes'
-import { RequestUrlResponse, requestUrl } from 'obsidian'
 import prepareMultipartRequestPiece from 'src/utils/obsidian-http-client'
 
 export function handleImgurErrorResponse(resp: RequestUrlResponse): void {
@@ -25,7 +26,12 @@ export default class AuthenticatedImgurClient {
     this.accessToken = accessToken
     void this.accountInfo()
       .then((r) => (this.authenticatedUser = r.data.url))
-      .catch((e) => console.error('Failed to get info about currently authenticated user!', e))
+      .catch((e) =>
+        console.error(
+          'Failed to get info about currently authenticated user!',
+          e,
+        ),
+      )
   }
 
   async accountInfo(): Promise<AccountInfo> {
@@ -85,7 +91,10 @@ export default class AuthenticatedImgurClient {
     return resp.json as Albums
   }
 
-  async createNewAlbum(name: string, description?: string): Promise<AlbumResponse> {
+  async createNewAlbum(
+    name: string,
+    description?: string,
+  ): Promise<AlbumResponse> {
     const requestData = new FormData()
     requestData.append('title', name)
     if (description) {

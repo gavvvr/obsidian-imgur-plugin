@@ -1,11 +1,8 @@
 import { App, PluginSettingTab, Setting } from 'obsidian'
 import ImgurPlugin from '../ImgurPlugin'
-import ImgurAuthModal from './ImgurAuthModal'
 
 export default class ImgurPluginSettingsTab extends PluginSettingTab {
   plugin: ImgurPlugin
-
-  authModal?: ImgurAuthModal
 
   authenticatedUserName?: string = undefined
 

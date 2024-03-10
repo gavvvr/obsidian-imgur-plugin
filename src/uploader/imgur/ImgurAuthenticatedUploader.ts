@@ -1,10 +1,10 @@
 import { ImgurPluginSettings } from 'src/ImgurPlugin'
 
 import ImageUploader from '../ImageUploader'
-import { ImgurPostData } from 'src/imgur/imgurResponseTypes'
+import { ImgurPostData } from 'src/uploader/imgur/imgurResponseTypes'
 import { requestUrl } from 'obsidian'
 import prepareMultipartRequestPiece from 'src/utils/obsidian-http-client'
-import { handleImgurErrorResponse } from 'src/imgur/AuthenticatedImgurClient'
+import { handleImgurErrorResponse } from 'src/uploader/imgur/AuthenticatedImgurClient'
 
 export default class ImgurAuthenticatedUploader implements ImageUploader {
   settings: ImgurPluginSettings
