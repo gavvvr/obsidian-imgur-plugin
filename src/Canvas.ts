@@ -49,19 +49,25 @@ async function imgurCanvasPaste(
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
   const canvas: Canvas = this.canvas
-  uploadImageOnCanvas(canvas, plugin, buildPasteEventCopy(e, files)).catch(() => {
-    void originalPasteHandler.call(this, e)
-  })
+  uploadImageOnCanvas(canvas, plugin, buildPasteEventCopy(e, files)).catch(
+    () => {
+      void originalPasteHandler.call(this, e)
+    },
+  )
 }
 
-function uploadImageOnCanvas(canvas: Canvas, plugin: ImgurPlugin, e: ClipboardEvent) {
+function uploadImageOnCanvas(
+  canvas: Canvas,
+  plugin: ImgurPlugin,
+  e: ClipboardEvent,
+) {
   const modal = new ImageUploadBlockingModal(plugin.app)
   modal.open()
 
   const file = e.clipboardData.files[0]
   return plugin
     .getCurrentImagesUploader()
-    .upload(file, plugin.settings.albumToUpload)
+    .upload(file)
     .then((url) => {
       if (!modal.isOpen) {
         return

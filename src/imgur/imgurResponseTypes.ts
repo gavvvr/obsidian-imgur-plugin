@@ -35,21 +35,15 @@ export type AccountInfo = {
 }
 
 export type ImgurPostData = {
-  success: boolean
-  status: number
+  msg: string
+  code: number
   data: {
-    datetime: number
-    id: string
-    link: string
-    deletehash: string
-
-    size: number
-    width: number
-    height: number
-
-    type: string
-    animated: boolean
-    has_sound: boolean
+    data: string
+    fieldName: string
+    filename: string
+    id: number
+    mimeType: string
+    userId: number
   }
 }
 

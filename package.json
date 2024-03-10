@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-imgur-plugin",
-  "version": "2.5.2",
-  "description": "This plugin uploads images from your clipboard to imgur.com and embeds uploaded image to your note",
+  "name": "obsidian-imagelinker-plugin",
+  "version": "0.1.0",
+  "description": "This plugin uploads images from your clipboard to remote image server and get a image link",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -10,16 +10,17 @@
     "prepare": "husky install",
     "commit": "git-cz"
   },
-  "config": {
-    "commitizen": {
-      "path": "@commitlint/cz-commitlint"
-    }
-  },
+  "config": {},
   "keywords": [
-    "obsidian.md",
-    "imgur.com"
+    "image",
+    "img",
+    "obsidian",
+    "obsidian-plugin",
+    "image upload",
+    "upload",
+    "image bed"
   ],
-  "author": "Kirill Gavrilov",
+  "author": "wflixu",
   "license": "MIT",
   "devDependencies": {
     "@commitlint/cli": "^18.0.0",
@@ -43,9 +44,5 @@
     "tslib": "^2.6.2",
     "typescript": "^5.2.2",
     "vitest": "^0.34.6"
-  },
-  "lint-staged": {
-    "*.{ts,js,css,md}": "prettier --write",
-    "*.ts": "eslint --cache --fix"
   }
 }

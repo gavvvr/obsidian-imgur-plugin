@@ -7,6 +7,7 @@ node_modules
 
 # build
 main.js
+data.json
 *.js.map
 
 # eslint
