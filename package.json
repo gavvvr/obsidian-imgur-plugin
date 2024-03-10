@@ -1,6 +1,6 @@
 {
-  "name": "obsidian-imagelinker-plugin",
-  "version": "1.0.0",
+  "name": "obsidian-imagelinker",
+  "version": "1.0.1",
   "description": "This plugin uploads images from your clipboard to remote image server and get a image link",
   "main": "main.js",
   "scripts": {

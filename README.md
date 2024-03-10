@@ -1,1 +1,3 @@
-# Obsidian ImageLinke Plugin
+# Obsidian ImageLinker Plugin
+
+image upload remote server 
