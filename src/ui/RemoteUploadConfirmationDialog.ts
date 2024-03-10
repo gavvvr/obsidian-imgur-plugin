@@ -14,8 +14,10 @@ export default class RemoteUploadConfirmationDialog extends Modal {
   }
 
   onOpen(): void {
-    this.titleEl.setText('Imgur plugin')
-    this.contentEl.setText('Would you like to upload to Imgur or paste your content locally?')
+    this.titleEl.setText('ImageLinker plugin')
+    this.contentEl.setText(
+      'Would you like to upload to ImageLinker or paste your content locally?',
+    )
 
     const buttonsDiv = this.modalEl.createDiv('modal-button-container')
 
@@ -35,10 +37,12 @@ export default class RemoteUploadConfirmationDialog extends Modal {
         this.afterUserInput()
       })
 
-    new ButtonComponent(buttonsDiv).setButtonText('Paste locally').onClick(() => {
-      this.deferredResolve({ shouldUpload: false })
-      this.afterUserInput()
-    })
+    new ButtonComponent(buttonsDiv)
+      .setButtonText('Paste locally')
+      .onClick(() => {
+        this.deferredResolve({ shouldUpload: false })
+        this.afterUserInput()
+      })
   }
 
   private afterUserInput() {

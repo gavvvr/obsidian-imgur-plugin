@@ -1,10 +1,8 @@
 import { ICON, ICON_DISABLE } from './constent'
 import {
-  CanvasView,
   Editor,
   EventRef,
   MarkdownView,
-  Menu,
   Notice,
   Plugin,
   addIcon,
@@ -16,12 +14,8 @@ import ApiError from './uploader/ApiError'
 import buildUploaderFrom from './uploader/imgUploaderFactory'
 import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
 import PasteEventCopy from './aux-event-classes/PasteEventCopy'
-import DragEventCopy from './aux-event-classes/DragEventCopy'
-import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
-import ImgurSize from './imgur/resizing/ImgurSize'
 import { allFilesAreImages } from './utils/FileList'
 import { fixImageTypeIfNeeded } from './utils/misc'
-import { createImgurCanvasPasteHandler } from './Canvas'
 
 declare module 'obsidian' {
   interface MarkdownSubView {
@@ -47,10 +41,9 @@ export interface ImgurPluginSettings {
 }
 
 const DEFAULT_SETTINGS: ImgurPluginSettings = {
-  accessToken:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibHgiLCJpZCI6MSwiaWF0IjoxNzA5ODg3MjUwLCJleHAiOjE3MTAwNjAwNTB9.oq5FJrAWN7HsNBqibFWY3ZPd0w6odM2W5j_Vr6UruwA',
-  uploadUrl: 'http://127.0.0.1:8443/chunk/upload',
-  showBase: 'http://127.0.0.1:8443/chunk/show',
+  accessToken: '',
+  uploadUrl: '',
+  showBase: '',
   showRemoteUploadConfirmation: true,
   enable: true,
 }
@@ -73,7 +66,6 @@ export default class ImgurPlugin extends Plugin {
     this.setupImagesUploader()
 
     this.setupImgurHandlers()
-    this.addResizingCommands()
   }
   refreshRibbon() {
     setIcon(
@@ -195,23 +187,10 @@ export default class ImgurPlugin extends Plugin {
     }
   }
 
-  private addResizingCommands() {
-    const sizes = ImgurSize.values()
-    for (const size of sizes) {
-      this.addCommand({
-        id: `imgur-resize-${size.suffix}-command`,
-        name: `Resize to ${size.description}${
-          size.sizeHint ? ` (${size.sizeHint})` : ''
-        }`,
-        editorCheckCallback: editorCheckCallbackFor(size),
-      })
-    }
-  }
-
   private static showUnconfiguredPluginNotice() {
     const fiveSecondsMillis = 5_000
     new Notice(
-      '⚠️ Please configure Imgur plugin or disable it',
+      '⚠️ Please configure ImageLinker plugin or disable it',
       fiveSecondsMillis,
     )
   }

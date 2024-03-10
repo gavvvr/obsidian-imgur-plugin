@@ -1,3 +1,7 @@
 # Obsidian ImageLinker Plugin
 
-image upload remote server 
+# 预览
+
+# 设置
+
+![](./public/imgs/settings.png)

@@ -28,7 +28,7 @@ export default class ImgurAuthenticationStatus {
 
   setStatusChecking() {
     this.clear()
-    this.authStatusDiv.setText('Checking Imgur authentication...')
+    this.authStatusDiv.setText('Checking ImageLinker authentication...')
   }
 
   setAuthenticatedAs(currentUser: string) {
@@ -44,7 +44,7 @@ export default class ImgurAuthenticationStatus {
 
   setImgurSessionError(sessionError: string) {
     this.clear()
-    this.authStatusDiv.setText(`Imgur session error: ${sessionError}`)
+    this.authStatusDiv.setText(`ImageLinker session error: ${sessionError}`)
     this.addAuthButton()
   }
 
