@@ -8,7 +8,7 @@
     "dev": "node esbuild.config.js",
     "test": "vitest --coverage",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.js production",
-    "prepare": "husky install",
+    "prepare": "husky",
     "commit": "git-cz"
   },
   "config": {
