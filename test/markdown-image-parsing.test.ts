@@ -33,7 +33,7 @@ describe('findImgurMarkdownImage', () => {
     expect(match.mdImagePieces.imageId).toBe('pLIMYhw')
   })
 
-  it('throws error for images with unexpected length of image id', () => {
+  describe('throws error for images with unexpected length of image id', () => {
     it.each([
       { line: '![](https://i.imgur.com/m3RpPCVsm.png)' },
       { line: '![](https://i.imgur.com/m3RpPC.png)' },
@@ -41,7 +41,7 @@ describe('findImgurMarkdownImage', () => {
       "GIVEN line '$line' an error reporting incorrect image id size will be thrown",
       ({ line }) => {
         const match = findImgurMarkdownImage(line, 0)
-        expect(match.mdImagePieces).toThrowError()
+        expect(() => match.mdImagePieces).toThrowError()
       },
     )
   })
