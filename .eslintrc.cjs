@@ -1,5 +1,12 @@
 module.exports = {
   root: true,
+  env: {
+    node: true,
+  },
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+  },
   extends: ['eslint:recommended', 'prettier'],
 
   overrides: [
@@ -20,16 +27,6 @@ module.exports = {
       ],
       rules: {
         '@typescript-eslint/no-explicit-any': 'off',
-      },
-    },
-    {
-      files: ['.eslintrc.js', 'esbuild.config.mjs'],
-      env: {
-        node: true,
-      },
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
       },
     },
   ],

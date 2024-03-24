@@ -3,10 +3,11 @@
   "version": "2.5.2",
   "description": "This plugin uploads images from your clipboard to imgur.com and embeds uploaded image to your note",
   "main": "main.js",
+  "type": "module",
   "scripts": {
-    "dev": "node esbuild.config.mjs",
+    "dev": "node esbuild.config.js",
     "test": "vitest --coverage",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.js production",
     "prepare": "husky install",
     "commit": "git-cz"
   },
