@@ -12,7 +12,10 @@ export default class UploadStrategy {
     'Authenticated Imgur upload',
   )
 
-  private constructor(readonly id: string, readonly description: string) {
+  private constructor(
+    readonly id: string,
+    readonly description: string,
+  ) {
     UploadStrategy.valuesArr.push(this)
   }
 }

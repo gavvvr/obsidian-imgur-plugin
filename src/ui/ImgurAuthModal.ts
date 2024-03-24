@@ -18,7 +18,11 @@ export default class ImgurAuthModal extends Modal {
 
   private intervalId: NodeJS.Timeout | null = null
 
-  constructor(clientId: string, app: App, private readonly afterClose?: () => Promise<void>) {
+  constructor(
+    clientId: string,
+    app: App,
+    private readonly afterClose?: () => Promise<void>,
+  ) {
     super(app)
     this.authLink = `https://api.imgur.com/oauth2/authorize?client_id=${clientId}&response_type=token`
   }
