@@ -26,8 +26,6 @@
     "@commitlint/cli": "^19.2.1",
     "@commitlint/config-conventional": "^19.1.0",
     "@commitlint/cz-commitlint": "^19.2.0",
-    "@typescript-eslint/eslint-plugin": "^7.4.0",
-    "@typescript-eslint/parser": "^7.4.0",
     "@vitest/coverage-v8": "^1.4.0",
     "@vitest/ui": "^1.4.0",
     "builtin-modules": "^3.3.0",
@@ -43,6 +41,7 @@
     "prettier": "^3.2.5",
     "tslib": "^2.6.2",
     "typescript": "^5.4.3",
+    "typescript-eslint": "^7.4.0",
     "vitest": "^1.4.0"
   },
   "lint-staged": {
