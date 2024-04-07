@@ -15,9 +15,10 @@ describe('Electron Testing', () => {
 
   context('blank note', () => {
     it('uploads clipboard image on PASTE shortcut', async () => {
-      await browser.execute(
-        `app.plugins.plugins['${IMGUR_PLUGIN_ID}'].imgUploader.upload = () => Promise.resolve('https://i.imgur.com/w88wB4I.png')`,
-      )
+      await browser.execute(`
+        const uploadStub = () => Promise.resolve('https://i.imgur.com/w88wB4I.png')
+        app.plugins.plugins['${IMGUR_PLUGIN_ID}'].imgUploader.upload = uploadStub
+      `)
 
       await createNewNoteAndFocusOnIt()
 
@@ -37,9 +38,10 @@ const removeTestVaultFromPreviousTestRun = () => {
 
 const createAndOpenFreshTestVaultWithImgurPlugin = async () => {
   const shouldCreateNewVault = true
-  await browser.execute(
-    `require('electron').ipcRenderer.sendSync('vault-open', '${TEST_VAULT_DIR}', ${shouldCreateNewVault})`,
-  )
+  await browser.execute(`
+    const {ipcRenderer} = require('electron')
+    ipcRenderer.sendSync('vault-open', '${TEST_VAULT_DIR}', ${shouldCreateNewVault})
+  `)
 
   const targetPluginsDir = `${TEST_VAULT_DIR}/.obsidian/plugins/${IMGUR_PLUGIN_ID}/`
   fs.mkdirSync(targetPluginsDir, { recursive: true })
@@ -57,9 +59,10 @@ const focusOnVaultOpenedWindow = async () => {
 }
 
 const activateImgurPlugin = async () => {
-  await browser.execute(
-    `app.plugins.setEnable(true);app.plugins.enablePlugin('${IMGUR_PLUGIN_ID}')`,
-  )
+  await browser.execute(`
+    app.plugins.setEnable(true)
+    app.plugins.enablePlugin('${IMGUR_PLUGIN_ID}')
+  `)
   await $('.modal-close-button').then((button) => button.click())
 }
 
@@ -72,9 +75,15 @@ const createNewNoteAndFocusOnIt = async () => {
 }
 
 const loadSampleImageToClipboard = async () => {
-  await browser.execute(
-    "const {nativeImage, clipboard} = require('electron'); clipboard.writeImage(nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC'))",
-  )
+  await browser.execute(`
+    const {nativeImage, clipboard} = require('electron')
+    const imageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+' +
+    'l2Z/dAAAAM0lEQVR4nGP4/5/h/1+' +
+    'G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC'
+    const dataUrl = 'data:image/png;base64,' + imageBase64
+    const sampleImage = nativeImage.createFromDataURL(dataUrl)
+    clipboard.writeImage(sampleImage)
+  `)
 }
 
 const pasteFromClipboard = async () => {
@@ -86,9 +95,10 @@ const confirmImageUpload = async () => {
 }
 
 const getTextFromOpenedNote = async () => {
-  await browser.execute(
-    "const {clipboard} = require('electron');clipboard.writeText(app.workspace.activeEditor.editor.getValue())",
-  )
+  await browser.execute(`
+    const {clipboard} = require('electron')
+    clipboard.writeText(app.workspace.activeEditor.editor.getValue())
+  `)
 
   return clipboard.readSync()
 }
