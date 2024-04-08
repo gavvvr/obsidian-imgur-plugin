@@ -34,7 +34,6 @@
     "@wdio/mocha-framework": "^8.35.0",
     "@wdio/spec-reporter": "^8.32.4",
     "builtin-modules": "^3.3.0",
-    "clipboardy": "^4.0.0",
     "commitizen": "^4.3.0",
     "esbuild": "^0.20.2",
     "eslint": "^8.57.0",
