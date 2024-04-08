@@ -1,6 +1,5 @@
 import * as fs from 'fs'
 import { Key } from 'webdriverio'
-import clipboard from 'clipboardy'
 
 const TEST_VAULT_DIR = 'test/e2e/e2e_test_vault'
 const IMGUR_PLUGIN_ID = 'obsidian-imgur-plugin'
@@ -95,10 +94,5 @@ const confirmImageUpload = async () => {
 }
 
 const getTextFromOpenedNote = async () => {
-  await browser.execute(`
-    const {clipboard} = require('electron')
-    clipboard.writeText(app.workspace.activeEditor.editor.getValue())
-  `)
-
-  return clipboard.readSync()
+  return await browser.execute('return app.workspace.activeEditor.editor.getValue()')
 }
