@@ -5,9 +5,9 @@
   "main": "main.js",
   "type": "module",
   "scripts": {
-    "dev": "node esbuild.config.js",
+    "dev": "node esbuild.config.mjs",
     "test": "vitest --coverage",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.js production",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "prepare": "husky",
     "commit": "git-cz",
     "test:e2e": "wdio run ./test/e2e/wdio.conf.ts"
