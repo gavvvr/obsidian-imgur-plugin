@@ -1,4 +1,14 @@
-import { CanvasView, Editor, MarkdownView, Notice, Plugin } from 'obsidian'
+import {
+  CanvasView,
+  Editor,
+  EditorPosition,
+  MarkdownView,
+  Menu,
+  Notice,
+  Plugin,
+  TFile,
+  parseLinktext,
+} from 'obsidian'
 import ImageUploader from './uploader/ImageUploader'
 import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
 import ApiError from './uploader/ApiError'
@@ -14,6 +24,8 @@ import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploa
 import { allFilesAreImages } from './utils/FileList'
 import { fixImageTypeIfNeeded } from './utils/misc'
 import { createImgurCanvasPasteHandler } from './Canvas'
+import { IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS } from './imgur/constants'
+import { localEmbeddedImageExpectedBoundaries } from './utils/editor'
 
 declare module 'obsidian' {
   interface MarkdownSubView {
@@ -22,6 +34,18 @@ declare module 'obsidian' {
 
   interface CanvasView extends TextFileView {
     handlePaste: (e: ClipboardEvent) => Promise<void>
+  }
+
+  interface Editor {
+    getClickableTokenAt(position: EditorPosition): ClickableToken | null
+  }
+
+  type ClickableToken = {
+    displayText: string
+    text: string
+    type: string
+    start: EditorPosition
+    end: EditorPosition
   }
 }
 
@@ -167,6 +191,52 @@ export default class ImgurPlugin extends Plugin {
     )
   }
 
+  private imgurPluginRightClickHandler = (menu: Menu, editor: Editor, view: MarkdownView) => {
+    const clickable = editor.getClickableTokenAt(editor.getCursor())
+
+    if (!clickable) return
+    if (clickable.type !== 'internal-link') return
+
+    const [localImageExpectedStart, localImageExpectedEnd] =
+      localEmbeddedImageExpectedBoundaries(clickable)
+
+    const clickablePrefix = editor.getRange(localImageExpectedStart, clickable.start)
+    const clickableSuffix = editor.getRange(clickable.end, localImageExpectedEnd)
+    if (clickablePrefix !== '![[' || clickableSuffix !== ']]') return
+
+    const lt = parseLinktext(clickable.text)
+    const file = view.app.metadataCache.getFirstLinkpathDest(lt.path, view.file.path)
+
+    if (!IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS.includes(file.extension)) return
+
+    menu.addItem((item) => {
+      item
+        .setTitle('Upload to Imgur')
+        .setIcon('wand')
+        .onClick(() =>
+          this.uploadLocalImageFromEditor(
+            editor,
+            file,
+            localImageExpectedStart,
+            localImageExpectedEnd,
+          ),
+        )
+    })
+  }
+
+  private async uploadLocalImageFromEditor(
+    editor: Editor,
+    file: TFile,
+    start: EditorPosition,
+    end: EditorPosition,
+  ) {
+    const arrayBuffer = await this.app.vault.readBinary(file)
+    const fileToUpload = new File([arrayBuffer], file.name)
+    editor.replaceRange('\n', end, end)
+    await this.uploadFileAndEmbedImgurImage(fileToUpload, { ch: 0, line: end.line + 1 })
+    editor.replaceRange(`<!--${editor.getRange(start, end)}-->`, start, end)
+  }
+
   get imgUploader(): ImageUploader {
     return this.imgUploaderField
   }
@@ -216,6 +286,8 @@ export default class ImgurPlugin extends Plugin {
         }
       }),
     )
+
+    this.registerEvent(this.app.workspace.on('editor-menu', this.imgurPluginRightClickHandler))
   }
 
   private overridePasteHandlerForCanvasView(view: CanvasView) {
@@ -247,9 +319,9 @@ export default class ImgurPlugin extends Plugin {
     new Notice('⚠️ Please configure Imgur plugin or disable it', fiveSecondsMillis)
   }
 
-  private async uploadFileAndEmbedImgurImage(file: File) {
+  private async uploadFileAndEmbedImgurImage(file: File, atPos?: EditorPosition) {
     const pasteId = (Math.random() + 1).toString(36).substring(2, 7)
-    this.insertTemporaryText(pasteId)
+    this.insertTemporaryText(pasteId, atPos)
 
     let imgUrl: string
     try {
@@ -269,9 +341,15 @@ export default class ImgurPlugin extends Plugin {
     this.embedMarkDownImage(pasteId, imgUrl)
   }
 
-  private insertTemporaryText(pasteId: string) {
+  private insertTemporaryText(pasteId: string, atPos?: EditorPosition) {
     const progressText = ImgurPlugin.progressTextFor(pasteId)
-    this.getEditor().replaceSelection(`${progressText}\n`)
+    const replacement = `${progressText}\n`
+    const editor = this.getEditor()
+    if (atPos) {
+      editor.replaceRange(replacement, atPos, atPos)
+    } else {
+      this.getEditor().replaceSelection(replacement)
+    }
   }
 
   private static progressTextFor(id: string) {
