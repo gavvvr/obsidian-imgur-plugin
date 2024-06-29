@@ -170,7 +170,7 @@ export default class ImgurPlugin extends Plugin {
     // with any text added by the plugin
     this.getEditor().replaceSelection('\n')
 
-    const promises: Promise<void>[] = []
+    const promises: Promise<any>[] = []
     const filesFailedToUpload: File[] = []
     for (let i = 0; i < files.length; i += 1) {
       const image = files[i]
@@ -233,8 +233,12 @@ export default class ImgurPlugin extends Plugin {
     const arrayBuffer = await this.app.vault.readBinary(file)
     const fileToUpload = new File([arrayBuffer], file.name)
     editor.replaceRange('\n', end, end)
-    await this.uploadFileAndEmbedImgurImage(fileToUpload, { ch: 0, line: end.line + 1 })
+    const imageUrl = await this.uploadFileAndEmbedImgurImage(fileToUpload, {
+      ch: 0,
+      line: end.line + 1,
+    })
     editor.replaceRange(`<!--${editor.getRange(start, end)}-->`, start, end)
+    return imageUrl
   }
 
   get imgUploader(): ImageUploader {
