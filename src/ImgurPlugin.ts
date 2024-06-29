@@ -6,6 +6,7 @@ import {
   Menu,
   Notice,
   Plugin,
+  ReferenceCache,
   TFile,
   parseLinktext,
 } from 'obsidian'
@@ -26,6 +27,8 @@ import { fixImageTypeIfNeeded } from './utils/misc'
 import { createImgurCanvasPasteHandler } from './Canvas'
 import { IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS } from './imgur/constants'
 import { localEmbeddedImageExpectedBoundaries } from './utils/editor'
+import UpdateLinksConfirmationModal from './ui/UpdateLinksConfirmationModal'
+import InfoModal from './ui/InfoModal'
 
 declare module 'obsidian' {
   interface MarkdownSubView {
@@ -219,9 +222,104 @@ export default class ImgurPlugin extends Plugin {
             file,
             localImageExpectedStart,
             localImageExpectedEnd,
+          ).then((imageUrl) =>
+            this.proposeToReplaceOtherLocalLinksIfAny(file, imageUrl, {
+              path: view.file.path,
+              startPosition: localImageExpectedStart,
+            }),
           ),
         )
     })
+  }
+
+  private proposeToReplaceOtherLocalLinksIfAny(
+    originalLocalFile: TFile,
+    remoteImageUrl: string,
+    originalReference: { path: string; startPosition: EditorPosition },
+  ) {
+    const otherReferencesByNote = this.getAllCachedReferencesForFile(originalLocalFile)
+    removeReferenceToOriginalNoteIfPresent(otherReferencesByNote, originalReference)
+
+    const notesWithSameLocalFile = Object.keys(otherReferencesByNote)
+    if (notesWithSameLocalFile.length === 0) return
+
+    this.showLinksUpdateDialog(originalLocalFile, remoteImageUrl, otherReferencesByNote)
+  }
+
+  private getAllCachedReferencesForFile(file: TFile) {
+    const allLinks = this.app.metadataCache.resolvedLinks
+
+    const notesWithLinks = []
+    for (const [notePath, noteLinks] of Object.entries(allLinks)) {
+      for (const [linkName] of Object.entries(noteLinks)) {
+        if (linkName === file.name) notesWithLinks.push(notePath)
+      }
+    }
+
+    const linksByNote = notesWithLinks.reduce(
+      (acc, note) => {
+        const noteMetadata = this.app.metadataCache.getCache(note)
+        const noteLinks = noteMetadata.embeds
+        if (noteLinks) {
+          acc[note] = noteLinks.filter((l) => l.link === file.name)
+        }
+        return acc
+      },
+      {} as Record<string, ReferenceCache[]>,
+    )
+    return linksByNote
+  }
+
+  private showLinksUpdateDialog(
+    localFile: TFile,
+    remoteImageUrl: string,
+    otherReferencesByNote: Record<string, ReferenceCache[]>,
+  ) {
+    const stats = getFilesAndLinksStats(otherReferencesByNote)
+    const dialogBox = new UpdateLinksConfirmationModal(this.app, localFile.path, stats)
+    dialogBox.onDoNotUpdateClick(() => dialogBox.close())
+    dialogBox.onDoUpdateClick(() => {
+      dialogBox.disableButtons()
+      dialogBox.setContent('Working...')
+      this.replaceAllLocalReferencesWithRemoteOne(otherReferencesByNote, remoteImageUrl)
+        .catch((e) => {
+          new InfoModal(
+            this.app,
+            'Error',
+            'Unexpected error occurred, check Developer Tools console for details',
+          ).open()
+          console.error('Something bad happened during links update', e)
+        })
+        .finally(() => dialogBox.close())
+      new Notice(`Updated ${stats.linksCount} links in ${stats.filesCount} files`)
+    })
+    dialogBox.open()
+  }
+
+  private async replaceAllLocalReferencesWithRemoteOne(
+    referencesByNotes: Record<string, ReferenceCache[]>,
+    remoteImageUrl: string,
+  ) {
+    for (const [notePath, refs] of Object.entries(referencesByNotes)) {
+      const noteFile = this.app.vault.getFileByPath(notePath)
+      const refsStartOffsetsSortedDescending = refs
+        .map((ref) => ({
+          start: ref.position.start.offset,
+          end: ref.position.end.offset,
+        }))
+        .sort((ref1, ref2) => ref2.start - ref1.start)
+
+      await this.app.vault.process(noteFile, (noteContent) => {
+        let updatedContent = noteContent
+        refsStartOffsetsSortedDescending.forEach((refPos) => {
+          updatedContent =
+            updatedContent.substring(0, refPos.start) +
+            `![](${remoteImageUrl})` +
+            updatedContent.substring(refPos.end)
+        })
+        return updatedContent
+      })
+    }
   }
 
   private async uploadLocalImageFromEditor(
@@ -343,6 +441,7 @@ export default class ImgurPlugin extends Plugin {
       throw e
     }
     this.embedMarkDownImage(pasteId, imgUrl)
+    return imgUrl
   }
 
   private insertTemporaryText(pasteId: string, atPos?: EditorPosition) {
@@ -388,5 +487,36 @@ export default class ImgurPlugin extends Plugin {
         break
       }
     }
+  }
+}
+
+function removeReferenceToOriginalNoteIfPresent(
+  otherReferencesByNote: Record<string, ReferenceCache[]>,
+  originalNote: { path: string; startPosition: EditorPosition },
+) {
+  if (!Object.keys(otherReferencesByNote).includes(originalNote.path)) return
+
+  const refsFromOriginalNote = otherReferencesByNote[originalNote.path]
+  const originalRefStart = originalNote.startPosition
+  const refForExclusion = refsFromOriginalNote.find(
+    (r) =>
+      r.position.start.line === originalRefStart.line &&
+      r.position.start.col === originalRefStart.ch,
+  )
+  if (refForExclusion) {
+    refsFromOriginalNote.remove(refForExclusion)
+    if (refsFromOriginalNote.length === 0) {
+      delete otherReferencesByNote[originalNote.path]
+    }
+  }
+}
+
+function getFilesAndLinksStats(otherReferencesByNote: Record<string, ReferenceCache[]>) {
+  return {
+    filesCount: Object.keys(otherReferencesByNote).length,
+    linksCount: Object.values(otherReferencesByNote).reduce(
+      (count, refs) => count + refs.length,
+      0,
+    ),
   }
 }
