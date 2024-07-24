@@ -1,13 +1,11 @@
 import { App, DropdownComponent, Notice, PluginSettingTab, Setting } from 'obsidian'
-import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY, IMGUR_PLUGIN_CLIENT_ID } from 'src/imgur/constants'
+import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from 'src/imgur/constants'
 import ImgurPlugin from '../ImgurPlugin'
 import UploadStrategy from '../UploadStrategy'
 import ImgurAuthModal from './ImgurAuthModal'
 import ImgurAuthenticationStatusItem from './ImgurAuthenticationStatus'
 import ApiError from 'src/uploader/ApiError'
 import { NewAlbumModal } from './NewAlbumModal'
-
-const REGISTER_CLIENT_URL = 'https://api.imgur.com/oauth2/addclient'
 
 export default class ImgurPluginSettingsTab extends PluginSettingTab {
   plugin: ImgurPlugin
@@ -85,26 +83,18 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
 
   private async drawSettings(parentEl: HTMLElement) {
     parentEl.empty()
-    switch (this.plugin.settings.uploadStrategy) {
-      case UploadStrategy.ANONYMOUS_IMGUR.id:
-        this.drawClientIdField(parentEl)
-        break
-      case UploadStrategy.AUTHENTICATED_IMGUR.id:
-        await this.createAuthenticationInfoBlock(parentEl)
+    this.drawClientIdField(parentEl)
+    if (this.plugin.settings.uploadStrategy === UploadStrategy.AUTHENTICATED_IMGUR.id) {
+      await this.createAuthenticationInfoBlock(parentEl)
 
-        if (this.authenticatedUserName) this.drawAlbumSettings(parentEl)
-        break
-      default:
-        throw new Error('There must be a bug, this code is not expected to be reached')
+      if (this.authenticatedUserName) this.drawAlbumSettings(parentEl)
     }
   }
 
   private drawClientIdField(containerEl: HTMLElement) {
     new Setting(containerEl)
       .setName('Client ID')
-      .setTooltip(
-        `Client ID is required for anonymous images upload. If you do not provide your own Client ID, the one shipped with the plugin and shared with many other users will be used. If you face issues with images upload, it's better generate your own Client ID"`,
-      )
+      .setTooltip(`Personal Client ID is required for plugin to work`, { delay: 1 })
       .setDesc(ImgurPluginSettingsTab.clientIdSettingDescription())
       .addText((text) =>
         text
@@ -118,11 +108,17 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
 
   private static clientIdSettingDescription() {
     const fragment = document.createDocumentFragment()
-    const a = document.createElement('a')
-    a.textContent = REGISTER_CLIENT_URL
-    a.setAttribute('href', REGISTER_CLIENT_URL)
-    fragment.append('Generate your own Client ID at ')
-    fragment.append(a)
+    const newClientIdInstructionsLink = document.createElement('a')
+    newClientIdInstructionsLink.textContent = 'the instructions'
+    newClientIdInstructionsLink.setAttribute(
+      'href',
+      'https://github.com/gavvvr/obsidian-imgur-plugin?tab=readme-ov-file#generating-client-id',
+    )
+    const existingClientIdsLink = document.createElement('a')
+    existingClientIdsLink.text = 'here'
+    existingClientIdsLink.setAttribute('href', 'https://imgur.com/account/settings/apps')
+    fragment.append('Find your existing Client ID ', existingClientIdsLink)
+    fragment.append(' or follow ', newClientIdInstructionsLink, ' to generate new Client ID.')
     return fragment
   }
 
@@ -130,7 +126,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     this.authElem = new ImgurAuthenticationStatusItem(parentEl)
     await this.drawAuthenticationInfo()
     this.authElem.authButtonClick = () => {
-      const modal = new ImgurAuthModal(IMGUR_PLUGIN_CLIENT_ID, this.app, async () => {
+      const modal = new ImgurAuthModal(this.plugin.settings.clientId, this.app, async () => {
         await this.drawAuthenticationInfo()
       })
       modal.open()

@@ -1,14 +1,10 @@
-import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY, IMGUR_PLUGIN_CLIENT_ID } from 'src/imgur/constants'
+import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from 'src/imgur/constants'
 import AuthenticatedImgurClient from 'src/imgur/AuthenticatedImgurClient'
 import { ImgurPluginSettings } from 'src/ImgurPlugin'
 import UploadStrategy from 'src/UploadStrategy'
 import ImageUploader from './ImageUploader'
 import ImgurAnonymousUploader from './imgur/ImgurAnonymousUploader'
 import ImgurAuthenticatedUploader from './imgur/ImgurAuthenticatedUploader'
-
-function defaultAnonymousUploader(): ImageUploader {
-  return new ImgurAnonymousUploader(IMGUR_PLUGIN_CLIENT_ID)
-}
 
 export default function buildUploaderFrom(
   settings: ImgurPluginSettings,
@@ -25,8 +21,9 @@ export default function buildUploaderFrom(
   if (settings.uploadStrategy === UploadStrategy.ANONYMOUS_IMGUR.id) {
     if (settings.clientId) {
       return new ImgurAnonymousUploader(settings.clientId)
+    } else {
+      return undefined
     }
-    return defaultAnonymousUploader()
   }
   throw Error('This line of code should never be reached')
 }

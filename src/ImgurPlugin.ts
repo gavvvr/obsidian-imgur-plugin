@@ -418,7 +418,7 @@ export default class ImgurPlugin extends Plugin {
 
   private static showUnconfiguredPluginNotice() {
     const fiveSecondsMillis = 5_000
-    new Notice('⚠️ Please configure Imgur plugin or disable it', fiveSecondsMillis)
+    new Notice('⚠️ Please configure Client ID for Imgur plugin or disable it', fiveSecondsMillis)
   }
 
   private async uploadFileAndEmbedImgurImage(file: File, atPos?: EditorPosition) {
