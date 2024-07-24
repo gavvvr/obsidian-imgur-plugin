@@ -87,7 +87,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     parentEl.empty()
     switch (this.plugin.settings.uploadStrategy) {
       case UploadStrategy.ANONYMOUS_IMGUR.id:
-        this.drawAnonymousClientIdSetting(parentEl)
+        this.drawClientIdField(parentEl)
         break
       case UploadStrategy.AUTHENTICATED_IMGUR.id:
         await this.createAuthenticationInfoBlock(parentEl)
@@ -99,7 +99,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     }
   }
 
-  private drawAnonymousClientIdSetting(containerEl: HTMLElement) {
+  private drawClientIdField(containerEl: HTMLElement) {
     new Setting(containerEl)
       .setName('Client ID')
       .setTooltip(
