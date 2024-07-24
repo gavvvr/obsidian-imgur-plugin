@@ -43,6 +43,24 @@ Install the plugin via the [Community Plugins][installation-instructions] tab wi
 
 ## Getting started
 
+### Generating Client ID
+
+For this plugin to work reliably and to avoid hitting [daily rate limits](#known-limitations) from using single shared Client ID,
+it was decided that each user should create his own "Client ID". Here are the steps:
+
+0. If you do not have an Imgur account, you need to get one first - follow <https://imgur.com/register>
+1. Being authenticated, go to <https://api.imgur.com/oauth2/addclient>
+2. Use any name for "Application name". For example: "Obsidian Imgur plugin"
+3. Choose "OAuth 2 authorization **with a callback URL**"
+4. Important: use `obsidian://imgur-oauth` as an "Authorization callback URL" value
+5. Fill in the "Email" field and proceed to get your Client ID
+
+Configure just received Client ID in Obsidian Imgur plugin settings[^1].
+
+After creation, Client ID can be managed at: <https://imgur.com/account/settings/apps>
+
+[^1]: You will only need to configure Client ID in Imgur plugin settings, secret is not required.
+
 ### Authenticated upload
 
 Go to plugin's settings, select 'Authenticated Imgur upload' and complete authentication.
@@ -54,26 +72,6 @@ You will see all your uploaded images at <https://your_login.imgur.com/all/>
 You might not want to see your Obsidian images tied to Imgur account.
 
 For this case there is an 'Anonymous Imgur upload' option.
-To perform anonymous uploads, the plugin needs a **Client ID**.
-This plugin is already shipped with the embedded **Client ID**, which will be used by default until you provide your own.
-But this same Client ID will also be used by other users around the world,
-which may lead to [reaching daily upload limits](#known-limitations) for this shared Client ID.
-
-If you face problems with anonymous images upload, it is recommended to generate your own Client ID.
-Please follow instructions below.
-
-#### Obtaining your own Client ID
-
-If you do not have an imgur.com account, you need to [get one](https://imgur.com/register) first.
-
-After you signed in, go to <https://api.imgur.com/oauth2/addclient>
-and generate **Client ID** for Obsidian:
-
-- provide application name, i.e. "Obsidian"
-- choose "OAuth 2 authorization without a callback URL"
-- and specify your e-mail
-
-You only need **Client ID**, Client secret is not required, no need to record it.
 
 ## FAQ
 
@@ -116,8 +114,7 @@ There is also a [plugin's thread][forum-thread] on Obsidian forum.
 
 - you can not paste animated gifs from the clipboard (they initially get copied as a static images to the clipboard).
   Use drag and drop instead if you want to upload an animated gif.
-- There are daily [upload limits](https://apidocs.imgur.com/#rate-limits) for [Anonymous uploads](#anonymous-upload)
-  using the same Client ID. That's why it is [recommended to generate your own](#obtaining-your-own-client-id)
+- there are [daily limits](https://apidocs.imgur.com/#rate-limits) for using Imgur API using associated with particular Client ID.
 
 ### Known issues
 
