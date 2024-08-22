@@ -1,13 +1,40 @@
 // @ts-check
 
 import eslint from '@eslint/js'
-import tseslint from 'typescript-eslint'
 import prettierConfig from 'eslint-config-prettier'
 import deprecationPlugin from 'eslint-plugin-deprecation'
+import perfectionist from 'eslint-plugin-perfectionist'
+import globals from 'globals'
+import tseslint from 'typescript-eslint'
+
+const orderedImportSettings = {
+  type: 'natural',
+  order: 'asc',
+  ignoreCase: false,
+  newlinesBetween: 'always',
+  groups: [
+    'type',
+    'builtin',
+    'external',
+    'internal-type',
+    'internal',
+    ['parent-type', 'sibling-type', 'index-type'],
+    ['parent', 'sibling', 'index'],
+    'object',
+    'unknown',
+  ],
+  environment: 'node',
+}
 
 export default tseslint.config(
   eslint.configs.recommended,
   prettierConfig,
+  {
+    ...perfectionist.configs['recommended-natural'],
+    rules: {
+      'perfectionist/sort-imports': ['error', orderedImportSettings],
+    },
+  },
   {
     files: ['**/*.ts'],
     extends: [
