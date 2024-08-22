@@ -30,6 +30,15 @@ export default tseslint.config(
     },
   },
   {
+    // extends: [eslint.configs.recommended, prettierConfig],
+    files: ['scripts/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.node },
+    },
+  },
+  {
     ignores: ['main.js', 'coverage/'],
   },
 )
