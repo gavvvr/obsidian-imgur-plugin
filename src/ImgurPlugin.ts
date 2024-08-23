@@ -354,7 +354,11 @@ export default class ImgurPlugin extends Plugin {
     await this.saveData(this.settings)
   }
 
-  async onload(): Promise<void> {
+  onload() {
+    void this.initPlugin()
+  }
+
+  private async initPlugin() {
     await this.loadSettings()
     this.addSettingTab(new ImgurPluginSettingsTab(this.app, this))
 

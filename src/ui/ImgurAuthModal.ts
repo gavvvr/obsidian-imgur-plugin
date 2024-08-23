@@ -50,10 +50,10 @@ export default class ImgurAuthModal extends Modal {
       .onClick(() => this.close())
   }
 
-  async onClose(): Promise<void> {
+  onClose() {
     clearInterval(this.intervalId)
     this.opened = false
-    if (this.afterClose) await this.afterClose()
+    if (this.afterClose) void this.afterClose()
   }
 
   private addNoWaitDiv(interval: NodeJS.Timeout) {
