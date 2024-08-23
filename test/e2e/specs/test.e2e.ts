@@ -44,7 +44,7 @@ const removeTestVaultFromPreviousTestRun = () => {
 
 const createAndOpenFreshTestVaultWithImgurPlugin = async () => {
   await browser.execute((testVaultDir: typeof TEST_VAULT_DIR) => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { ipcRenderer } = require('electron')
     const shouldCreateNewVault = true
     ipcRenderer.sendSync('vault-open', testVaultDir, shouldCreateNewVault)
@@ -60,6 +60,7 @@ const focusOnVaultOpenedWindow = async () => {
   const lastWindow = (await browser.getWindowHandles()).at(0)
   try {
     await browser.switchWindow(lastWindow!)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     // doing nothing... it throws, but it does switch the window
   }
@@ -94,7 +95,7 @@ const configureClientId = async () => {
 const openImgurPluginSettingsTab = async () => {
   await browser.execute(openObsidianSettings)
   // switch to Imgur settings tab
-  await $('.vertical-tab-nav-item=Imgur').then((imgurSettingsTab) => imgurSettingsTab.click())
+  await $('.vertical-tab-nav-item=Imgur').click()
 }
 
 const findClientIdInputSetting = async () => {
@@ -106,16 +107,16 @@ const findClientIdInputSetting = async () => {
 }
 
 const createNewNoteAndFocusOnIt = async () => {
-  const newNoteButton = await $('aria/New note')
+  const newNoteButton = $('aria/New note')
   await newNoteButton.click()
 
-  const note = await $('.cm-contentContainer div[role="textbox"]')
+  const note = $('.cm-contentContainer div[role="textbox"]')
   await note.click()
 }
 
 const loadSampleImageToClipboard = async () => {
   await browser.execute(() => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { nativeImage, clipboard } = require('electron')
     const imageBase64 =
       'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+' +
@@ -132,7 +133,7 @@ const pasteFromClipboard = async () => {
 }
 
 const confirmImageUpload = async () => {
-  await (await $('button=Upload')).click()
+  await $('button=Upload').click()
 }
 
 const getTextFromOpenedNote = async () => {
