@@ -11,11 +11,14 @@ describe('Electron Testing', () => {
     removeTestVaultFromPreviousTestRun()
     await createAndOpenFreshTestVaultWithImgurPlugin()
     await focusOnVaultOpenedWindow()
+    await $('button=Trust author and enable plugins').click()
+    await pressCloseButtonOn('Trust vault modal')
     await activateImgurPlugin()
   })
 
   context('blank note', () => {
     it('uploads clipboard image on PASTE shortcut', async () => {
+      await configureClientId()
       await browser.execute((imgurPluginId: typeof IMGUR_PLUGIN_ID) => {
         // @ts-expect-error 'app' exists in Obsidian
         declare const app: App
@@ -62,6 +65,13 @@ const focusOnVaultOpenedWindow = async () => {
   }
 }
 
+const pressCloseButtonOn = async (whatIsBeingClosed: string) => {
+  console.log(`Closing '${whatIsBeingClosed}'`)
+
+  const closeButton = $('.modal-close-button')
+  await closeButton.click()
+}
+
 const activateImgurPlugin = async () => {
   await browser.execute((imgurPluginId: typeof IMGUR_PLUGIN_ID) => {
     // @ts-expect-error 'app' exists in Obsidian
@@ -69,7 +79,30 @@ const activateImgurPlugin = async () => {
     app.plugins.setEnable(true)
     app.plugins.enablePlugin(imgurPluginId)
   }, IMGUR_PLUGIN_ID)
-  await $('.modal-close-button').then((button) => button.click())
+  await pressCloseButtonOn('Settings, which was opened as a side effect of enabling plugin')
+}
+
+const configureClientId = async () => {
+  await openImgurPluginSettingsTab()
+
+  const clientIdInputSetting = await findClientIdInputSetting()
+  await clientIdInputSetting.setValue('test-client-id')
+
+  await pressCloseButtonOn('Settings')
+}
+
+const openImgurPluginSettingsTab = async () => {
+  await browser.execute(openObsidianSettings)
+  // switch to Imgur settings tab
+  await $('.vertical-tab-nav-item=Imgur').then((imgurSettingsTab) => imgurSettingsTab.click())
+}
+
+const findClientIdInputSetting = async () => {
+  const clientSettingItem = await $$('div.setting-item').find<WebdriverIO.Element>(async (item) => {
+    const label = await item.$('.setting-item-info .setting-item-name').getText()
+    return label === 'Client ID'
+  })
+  return clientSettingItem.$('.setting-item-control input[type="text"]')
 }
 
 const createNewNoteAndFocusOnIt = async () => {
@@ -120,5 +153,14 @@ declare module 'obsidian' {
       setEnable(toggle: boolean): void
       enablePlugin(pluginId: string): void
     }
+    commands: {
+      executeCommandById: (id: string) => boolean
+    }
   }
+}
+
+const openObsidianSettings = () => {
+  // @ts-expect-error 'app' exists in Obsidian
+  declare const app: App
+  app.commands.executeCommandById('app:open-settings')
 }
