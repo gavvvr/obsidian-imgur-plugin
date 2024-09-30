@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node scripts/dev.js",
     "test": "vitest --coverage",
-    "build": "tsc -noEmit -skipLibCheck && node scripts/esbuild.config.js production",
+    "build": "tsc -noEmit -skipLibCheck && node scripts/esbuild.build.js production",
     "prepare": "husky",
     "commit": "git-cz",
     "test:e2e": "wdio run ./test/e2e/wdio.conf.ts"
