@@ -102,6 +102,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
           .setValue(this.plugin.settings.clientId)
           .onChange((value) => {
             this.plugin.settings.clientId = value
+            this.enableOrDisableAuthenticationButton()
           }),
       )
   }
@@ -122,9 +123,15 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     return fragment
   }
 
+  private enableOrDisableAuthenticationButton() {
+    if (this.plugin.settings.clientId) this.authElem.enableAuthButton()
+    else this.authElem.disableAuthButton()
+  }
+
   private async createAuthenticationInfoBlock(parentEl: HTMLElement) {
     this.authElem = new ImgurAuthenticationStatusItem(parentEl)
     await this.drawAuthenticationInfo()
+    this.enableOrDisableAuthenticationButton()
     this.authElem.authButtonClick = () => {
       const modal = new ImgurAuthModal(this.plugin.settings.clientId, this.app, async () => {
         await this.drawAuthenticationInfo()

@@ -4,6 +4,8 @@ export default class ImgurAuthenticationStatus {
   private authStatusDiv: HTMLDivElement
   private buttonsDiv: HTMLDivElement
 
+  private authButton?: ButtonComponent
+
   authButtonClick: (evt: MouseEvent) => void
   logoutButtonClick: (evt: MouseEvent) => Promise<void>
 
@@ -54,9 +56,18 @@ export default class ImgurAuthenticationStatus {
     this.addAuthButton()
   }
 
+  disableAuthButton() {
+    this.authButton?.setDisabled(true)
+  }
+
+  enableAuthButton() {
+    this.authButton?.setDisabled(false)
+  }
+
   private clear() {
     this.authStatusDiv.empty()
     this.buttonsDiv.empty()
+    this.authButton = undefined
   }
 
   private addLogoutButton() {
@@ -67,7 +78,7 @@ export default class ImgurAuthenticationStatus {
   }
 
   private addAuthButton() {
-    new ButtonComponent(this.buttonsDiv)
+    this.authButton = new ButtonComponent(this.buttonsDiv)
       .setButtonText('Authenticate')
       .setCta()
       .onClick((e) => this.authButtonClick(e))
