@@ -13,4 +13,5 @@ export const IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS = [
   'webm',
   'mov',
   'mkv',
+  'jpg',
 ]
