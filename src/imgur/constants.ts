@@ -3,6 +3,7 @@ export const IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY = 'imgur-access_token'
 
 export const IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS = [
   'jpeg',
+  'jpg',
   'png',
   'gif',
   'apng',
@@ -13,5 +14,4 @@ export const IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS = [
   'webm',
   'mov',
   'mkv',
-  'jpg',
 ]
