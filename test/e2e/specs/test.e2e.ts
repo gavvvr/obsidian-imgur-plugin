@@ -10,7 +10,7 @@ describe('Electron Testing', () => {
   before(async () => {
     removeTestVaultFromPreviousTestRun()
     await createAndOpenFreshTestVaultWithImgurPlugin()
-    await focusOnVaultOpenedWindow()
+    await switchToMainVaultWindow()
     await $('button=Trust author and enable plugins').click()
     await pressCloseButtonOn('Trust vault modal')
     await activateImgurPlugin()
@@ -56,14 +56,8 @@ const createAndOpenFreshTestVaultWithImgurPlugin = async () => {
   fs.copyFileSync('main.js', `${targetPluginsDir}/main.js`)
 }
 
-const focusOnVaultOpenedWindow = async () => {
-  const lastWindow = (await browser.getWindowHandles()).at(0)
-  try {
-    await browser.switchWindow(lastWindow!)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (e) {
-    // doing nothing... it throws, but it does switch the window
-  }
+const switchToMainVaultWindow = async () => {
+  await browser.switchWindow('app://obsidian.md/index.html')
 }
 
 const pressCloseButtonOn = async (whatIsBeingClosed: string) => {
