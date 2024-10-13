@@ -80,7 +80,6 @@ const activateImgurPlugin = async () => {
     app.plugins.setEnable(true)
     app.plugins.enablePlugin(imgurPluginId)
   }, IMGUR_PLUGIN_ID)
-  await pressCloseButtonOn('Settings, which was opened as a side effect of enabling plugin')
 }
 
 const configureClientId = async () => {
