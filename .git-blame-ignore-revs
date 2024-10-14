@@ -1,3 +1,5 @@
+# sort imports with Perfectionist ESLint plugin
+161b26b495162f6fd03e9cb60923883f49169193
 # reformat with prettier 3.x
 89ee04b1f64c71215bd67cbb1174f4006c6ea0be
 # adjust the code after changing eslint rules set
