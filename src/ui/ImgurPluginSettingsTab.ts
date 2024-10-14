@@ -76,9 +76,8 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     })
   }
 
-  async hide(): Promise<void> {
-    await this.plugin.saveSettings()
-    this.plugin.setupImagesUploader()
+  hide() {
+    void this.plugin.saveSettings().then(() => this.plugin.setupImagesUploader())
   }
 
   private async drawSettings(parentEl: HTMLElement) {
