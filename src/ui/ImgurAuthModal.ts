@@ -1,4 +1,4 @@
-import { Modal, ButtonComponent, App } from 'obsidian'
+import { App, ButtonComponent, Modal } from 'obsidian'
 
 const ONE_SECOND_MILLIS = 1_000
 const OPEN_BROWSER_IN_SECONDS = 4

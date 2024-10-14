@@ -1,9 +1,10 @@
 import { Canvas } from 'obsidian'
+
 import ImgurPlugin from './ImgurPlugin'
 import ImageUploadBlockingModal from './ui/ImageUploadBlockingModal'
+import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
 import { allFilesAreImages } from './utils/FileList'
 import { buildPasteEventCopy } from './utils/events'
-import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
 
 export function createImgurCanvasPasteHandler(
   plugin: ImgurPlugin,

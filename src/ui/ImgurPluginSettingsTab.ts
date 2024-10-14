@@ -1,10 +1,11 @@
 import { App, DropdownComponent, Notice, PluginSettingTab, Setting } from 'obsidian'
-import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from 'src/imgur/constants'
+
 import ImgurPlugin from '../ImgurPlugin'
 import UploadStrategy from '../UploadStrategy'
+import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from '../imgur/constants'
+import ApiError from '../uploader/ApiError'
 import ImgurAuthModal from './ImgurAuthModal'
 import ImgurAuthenticationStatusItem from './ImgurAuthenticationStatus'
-import ApiError from 'src/uploader/ApiError'
 import { NewAlbumModal } from './NewAlbumModal'
 
 export default class ImgurPluginSettingsTab extends PluginSettingTab {

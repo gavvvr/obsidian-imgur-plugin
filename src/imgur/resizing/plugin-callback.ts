@@ -1,4 +1,5 @@
 import { Editor, Notice } from 'obsidian'
+
 import ImgurSize from './ImgurSize'
 import findImgurMarkdownImage from './md-image-parsing'
 import resizeTo from './resizing'

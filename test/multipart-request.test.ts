@@ -1,5 +1,6 @@
-import { buildMultipartBody } from 'src/utils/multipart-http'
 import { describe, expect, it } from 'vitest'
+
+import { buildMultipartBody } from '../src/utils/multipart-http'
 
 describe('buildMultipartBody', () => {
   it('creates expected result for multiple form data text fields', async () => {

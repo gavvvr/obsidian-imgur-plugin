@@ -1,4 +1,7 @@
-import ApiError from 'src/uploader/ApiError'
+import { requestUrl, RequestUrlResponse } from 'obsidian'
+
+import ApiError from '../uploader/ApiError'
+import prepareMultipartRequestPiece from '../utils/obsidian-http-client'
 import { IMGUR_API_BASE } from './constants'
 import {
   AccountInfo,
@@ -7,8 +10,6 @@ import {
   ImgurErrorData,
   ImgurPostData,
 } from './imgurResponseTypes'
-import { RequestUrlResponse, requestUrl } from 'obsidian'
-import prepareMultipartRequestPiece from 'src/utils/obsidian-http-client'
 
 export function handleImgurErrorResponse(resp: RequestUrlResponse): void {
   if (resp.headers['Content-Type'] === 'application/json') {

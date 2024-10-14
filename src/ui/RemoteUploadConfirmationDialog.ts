@@ -1,4 +1,4 @@
-import { Modal, ButtonComponent } from 'obsidian'
+import { ButtonComponent, Modal } from 'obsidian'
 
 export default class RemoteUploadConfirmationDialog extends Modal {
   private userResponded = false

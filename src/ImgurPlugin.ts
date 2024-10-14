@@ -5,30 +5,31 @@ import {
   MarkdownView,
   Menu,
   Notice,
+  parseLinktext,
   Plugin,
   ReferenceCache,
   TFile,
-  parseLinktext,
 } from 'obsidian'
-import ImageUploader from './uploader/ImageUploader'
-import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
-import ApiError from './uploader/ApiError'
+
+import { createImgurCanvasPasteHandler } from './Canvas'
 import UploadStrategy from './UploadStrategy'
-import buildUploaderFrom from './uploader/imgUploaderFactory'
-import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
-import PasteEventCopy from './aux-event-classes/PasteEventCopy'
 import DragEventCopy from './aux-event-classes/DragEventCopy'
-import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
-import ImgurSize from './imgur/resizing/ImgurSize'
+import PasteEventCopy from './aux-event-classes/PasteEventCopy'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
+import { IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS } from './imgur/constants'
+import ImgurSize from './imgur/resizing/ImgurSize'
+import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
+import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
+import InfoModal from './ui/InfoModal'
+import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
+import UpdateLinksConfirmationModal from './ui/UpdateLinksConfirmationModal'
+import ApiError from './uploader/ApiError'
+import ImageUploader from './uploader/ImageUploader'
+import buildUploaderFrom from './uploader/imgUploaderFactory'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
 import { allFilesAreImages } from './utils/FileList'
-import { fixImageTypeIfNeeded } from './utils/misc'
-import { createImgurCanvasPasteHandler } from './Canvas'
-import { IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS } from './imgur/constants'
 import { localEmbeddedImageExpectedBoundaries } from './utils/editor'
-import UpdateLinksConfirmationModal from './ui/UpdateLinksConfirmationModal'
-import InfoModal from './ui/InfoModal'
+import { fixImageTypeIfNeeded } from './utils/misc'
 
 declare module 'obsidian' {
   interface MarkdownSubView {

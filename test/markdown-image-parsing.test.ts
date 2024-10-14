@@ -1,4 +1,5 @@
-import { expect, describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
+
 import { isWrapped } from '../src/imgur/resizing/MarkdownImagePieces'
 import findImgurMarkdownImage from '../src/imgur/resizing/md-image-parsing'
 

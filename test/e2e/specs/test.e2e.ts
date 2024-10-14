@@ -1,7 +1,9 @@
 import * as fs from 'fs'
-import { Key } from 'webdriverio'
-import ImgurPlugin from '../../../src/ImgurPlugin'
+
 import { App } from 'obsidian'
+import { Key } from 'webdriverio'
+
+import ImgurPlugin from '../../../src/ImgurPlugin'
 
 const TEST_VAULT_DIR = 'test/e2e/e2e_test_vault'
 const IMGUR_PLUGIN_ID = 'obsidian-imgur-plugin'

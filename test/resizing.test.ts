@@ -1,7 +1,8 @@
-import { expect, describe, it } from 'vitest'
-import resizeTo from '../src/imgur/resizing/resizing'
+import { describe, expect, it } from 'vitest'
+
 import ImgurSize from '../src/imgur/resizing/ImgurSize'
 import imgurMarkdownImageRegexMatch from '../src/imgur/resizing/md-image-parsing'
+import resizeTo from '../src/imgur/resizing/resizing'
 
 describe('resizeTo', () => {
   it.each([

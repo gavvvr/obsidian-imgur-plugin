@@ -1,9 +1,10 @@
-import { IMGUR_API_BASE } from 'src/imgur/constants'
-import { ImgurPostData } from '../../imgur/imgurResponseTypes'
-import ImageUploader from '../ImageUploader'
-import { handleImgurErrorResponse } from '../../imgur/AuthenticatedImgurClient'
 import { requestUrl } from 'obsidian'
-import prepareMultipartRequestPiece from 'src/utils/obsidian-http-client'
+
+import { handleImgurErrorResponse } from '../../imgur/AuthenticatedImgurClient'
+import { IMGUR_API_BASE } from '../../imgur/constants'
+import { ImgurPostData } from '../../imgur/imgurResponseTypes'
+import prepareMultipartRequestPiece from '../../utils/obsidian-http-client'
+import ImageUploader from '../ImageUploader'
 
 export default class ImgurAnonymousUploader implements ImageUploader {
   private readonly clientId!: string
