@@ -3,6 +3,7 @@
   "description": "This plugin uploads images from your clipboard to imgur.com and embeds uploaded image to your note",
   "main": "main.js",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "node scripts/dev.js",
     "test": "vitest --coverage",
