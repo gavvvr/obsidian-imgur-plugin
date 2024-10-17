@@ -2,13 +2,6 @@
 import type { Options } from '@wdio/types'
 export const config: Options.Testrunner = {
   runner: 'local',
-  autoCompileOpts: {
-    autoCompile: true,
-    tsNodeOpts: {
-      project: './tsconfig.json',
-      transpileOnly: true,
-    },
-  },
   specs: ['./specs/*.ts'],
   exclude: [],
   maxInstances: 10,
