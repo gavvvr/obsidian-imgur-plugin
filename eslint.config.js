@@ -67,6 +67,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['main.js', 'coverage/'],
+    ignores: ['main.js', 'coverage/', '**/e2e_test_vault/'],
   },
 )
