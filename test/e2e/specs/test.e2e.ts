@@ -3,10 +3,7 @@ import * as fs from 'fs'
 import { App } from 'obsidian'
 import { Key } from 'webdriverio'
 
-import ImgurPlugin from '../../../src/ImgurPlugin'
-
-const TEST_VAULT_DIR = 'test/e2e/e2e_test_vault'
-const IMGUR_PLUGIN_ID = 'obsidian-imgur-plugin'
+import { IMGUR_PLUGIN_ID, TEST_VAULT_DIR } from '../constants'
 
 describe('Electron Testing', () => {
   before(async () => {
@@ -137,22 +134,6 @@ const getTextFromOpenedNote = async () => {
     declare const app: App
     return app.workspace.activeEditor!.editor!.getValue()
   })
-}
-
-declare module 'obsidian' {
-  interface App {
-    plugins: {
-      plugins: {
-        [index: string]: Plugin
-        [IMGUR_PLUGIN_ID]: ImgurPlugin
-      }
-      setEnable(toggle: boolean): void
-      enablePlugin(pluginId: string): void
-    }
-    commands: {
-      executeCommandById: (id: string) => boolean
-    }
-  }
 }
 
 const openObsidianSettings = () => {
