@@ -1,6 +1,5 @@
 /// <reference types="wdio-electron-service" />
-import type { Options } from '@wdio/types'
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   runner: 'local',
   specs: ['./specs/*.ts'],
   exclude: [],
