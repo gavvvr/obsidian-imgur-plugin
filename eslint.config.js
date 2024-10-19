@@ -2,6 +2,7 @@
 
 import eslint from '@eslint/js'
 import perfectionist from 'eslint-plugin-perfectionist'
+import * as wdio from 'eslint-plugin-wdio'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
@@ -56,6 +57,10 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },
+  },
+  {
+    files: ['test/e2e/specs/**/*.ts'],
+    extends: [wdio.configs['flat/recommended']],
   },
   {
     extends: [eslint.configs.recommended],
