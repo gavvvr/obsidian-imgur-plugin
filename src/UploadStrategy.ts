@@ -1,7 +1,7 @@
 export default class UploadStrategy {
   private static readonly valuesArr: UploadStrategy[] = []
 
-  static get values(): ReadonlyArray<UploadStrategy> {
+  static get values(): readonly UploadStrategy[] {
     return this.valuesArr
   }
 

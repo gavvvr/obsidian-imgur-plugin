@@ -44,7 +44,7 @@ declare module 'obsidian' {
     getClickableTokenAt(position: EditorPosition): ClickableToken | null
   }
 
-  type ClickableToken = {
+  interface ClickableToken {
     displayText: string
     text: string
     type: string

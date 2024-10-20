@@ -1,4 +1,4 @@
-export type ImgurErrorData = {
+export interface ImgurErrorData {
   success: boolean
   status: number
   data: {
@@ -8,7 +8,7 @@ export type ImgurErrorData = {
   }
 }
 
-export type AccountInfo = {
+export interface AccountInfo {
   success: boolean
   status: number
   data: {
@@ -34,7 +34,7 @@ export type AccountInfo = {
   }
 }
 
-export type ImgurPostData = {
+export interface ImgurPostData {
   success: boolean
   status: number
   data: {
@@ -53,19 +53,19 @@ export type ImgurPostData = {
   }
 }
 
-export type Albums = {
+export interface Albums {
   success: boolean
   status: number
-  data: Array<AlbumInfo>
+  data: AlbumInfo[]
 }
 
-export type AlbumResponse = {
+export interface AlbumResponse {
   success: boolean
   status: number
   data: AlbumInfo
 }
 
-export type AlbumInfo = {
+export interface AlbumInfo {
   id: string
   title: string
   privacy: 'public' | 'hidden'

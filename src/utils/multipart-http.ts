@@ -1,12 +1,12 @@
 function buildMultipartBody(formData: FormData, boundary: string): Blob {
-  const multipartPirces: Array<string | Blob> = multipartPiecesFrom(formData)
+  const multipartPirces: (string | Blob)[] = multipartPiecesFrom(formData)
   return composeMultipartBodyFrom(multipartPirces, boundary)
 }
 
 export { buildMultipartBody }
 
 function multipartPiecesFrom(formData: FormData) {
-  const pieces: Array<string | Blob> = []
+  const pieces: (string | Blob)[] = []
   formData.forEach((content, name) => {
     if (typeof content === 'string') {
       pieces.push(stringToFormDataSection(name, content))

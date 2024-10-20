@@ -5,7 +5,7 @@ export default class RemoteUploadConfirmationDialog extends Modal {
 
   private deferredResolve: (value: UploadConfirmationResponse) => void
 
-  private resp: Promise<UploadConfirmationResponse> = new Promise((resolve) => {
+  private resp = new Promise<UploadConfirmationResponse>((resolve) => {
     this.deferredResolve = resolve
   })
 
@@ -51,7 +51,7 @@ export default class RemoteUploadConfirmationDialog extends Modal {
   }
 }
 
-export type UploadConfirmationResponse = {
+export interface UploadConfirmationResponse {
   shouldUpload: boolean | undefined
   alwaysUpload?: boolean
 }
