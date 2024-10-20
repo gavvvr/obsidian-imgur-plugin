@@ -1,7 +1,7 @@
 export function buildPasteEventCopy(originalEvent: ClipboardEvent, files: File[] | FileList) {
   const clipboardData = new DataTransfer()
-  for (let i = 0; i < files.length; i += 1) {
-    clipboardData.items.add(files[i])
+  for (const file of files) {
+    clipboardData.items.add(file)
   }
 
   return new ClipboardEvent(originalEvent.type, { clipboardData })

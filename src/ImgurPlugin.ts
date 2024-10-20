@@ -121,8 +121,8 @@ export default class ImgurPlugin extends Plugin {
       }
     }
 
-    for (let i = 0; i < files.length; i += 1) {
-      this.uploadFileAndEmbedImgurImage(files[i]).catch(() => {
+    for (const file of files) {
+      this.uploadFileAndEmbedImgurImage(file).catch(() => {
         markdownView.currentMode.clipboardManager.handlePaste(new PasteEventCopy(e))
       })
     }
@@ -176,8 +176,7 @@ export default class ImgurPlugin extends Plugin {
 
     const promises: Promise<any>[] = []
     const filesFailedToUpload: File[] = []
-    for (let i = 0; i < files.length; i += 1) {
-      const image = files[i]
+    for (const image of files) {
       const uploadPromise = this.uploadFileAndEmbedImgurImage(image).catch(() => {
         filesFailedToUpload.push(image)
       })
