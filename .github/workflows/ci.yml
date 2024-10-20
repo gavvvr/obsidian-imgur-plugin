@@ -20,14 +20,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
       - name: Environment details
-        run: npm version
+        run: pnpm version
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
       - name: Build
-        run: npm run build
+        run: pnpm run build
       - name: Test
-        run: npm run test
+        run: pnpm run test
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
