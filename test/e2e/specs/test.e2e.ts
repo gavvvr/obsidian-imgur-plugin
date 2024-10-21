@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import * as fs from 'node:fs/promises'
 
 import { App } from 'obsidian'
 import { Key } from 'webdriverio'
@@ -7,7 +7,7 @@ import { IMGUR_PLUGIN_ID, TEST_VAULT_DIR } from '../constants'
 
 describe('Electron Testing', () => {
   before(async () => {
-    removeTestVaultFromPreviousTestRun()
+    await removeTestVaultFromPreviousTestRun()
     await createAndOpenFreshTestVaultWithImgurPlugin()
     await switchToMainVaultWindow()
     await $('button=Trust author and enable plugins').click()
@@ -37,8 +37,8 @@ describe('Electron Testing', () => {
   })
 })
 
-const removeTestVaultFromPreviousTestRun = () => {
-  fs.rmSync(TEST_VAULT_DIR, { force: true, recursive: true })
+const removeTestVaultFromPreviousTestRun = async () => {
+  await fs.rm(TEST_VAULT_DIR, { force: true, recursive: true })
 }
 
 const createAndOpenFreshTestVaultWithImgurPlugin = async () => {
@@ -50,9 +50,9 @@ const createAndOpenFreshTestVaultWithImgurPlugin = async () => {
   }, TEST_VAULT_DIR)
 
   const targetPluginsDir = `${TEST_VAULT_DIR}/.obsidian/plugins/${IMGUR_PLUGIN_ID}/`
-  fs.mkdirSync(targetPluginsDir, { recursive: true })
-  fs.copyFileSync('manifest.json', `${targetPluginsDir}/manifest.json`)
-  fs.copyFileSync('main.js', `${targetPluginsDir}/main.js`)
+  await fs.mkdir(targetPluginsDir, { recursive: true })
+  await fs.copyFile('manifest.json', `${targetPluginsDir}/manifest.json`)
+  await fs.copyFile('main.js', `${targetPluginsDir}/main.js`)
 }
 
 const switchToMainVaultWindow = async () => {
