@@ -10,7 +10,8 @@
     "build": "tsc -noEmit -skipLibCheck && node scripts/esbuild.build.js production",
     "prepare": "husky",
     "commit": "git-cz",
-    "test:e2e": "wdio run ./test/e2e/wdio.conf.ts"
+    "test:e2e": "wdio run ./test/e2e/wdio.conf.ts",
+    "test:eslint": "eslint --cache"
   },
   "config": {
     "commitizen": {
