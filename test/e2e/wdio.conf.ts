@@ -1,4 +1,6 @@
 /// <reference types="wdio-electron-service" />
+import ObsidianApp from './specs/pageobjects/obsidian-app.page'
+
 export const config: WebdriverIO.Config = {
   runner: 'local',
   specs: ['./specs/*.ts'],
@@ -43,5 +45,10 @@ export const config: WebdriverIO.Config = {
   mochaOpts: {
     ui: 'bdd',
     timeout: 60000,
+  },
+  beforeSuite: async () => {
+    await ObsidianApp.removeE2eTestVaultIfExists()
+    await ObsidianApp.createAndOpenFreshVault()
+    await ObsidianApp.activateImgurPlugin()
   },
 }

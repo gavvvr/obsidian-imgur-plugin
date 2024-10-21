@@ -3,10 +3,6 @@ import MockingUtils from './utils/mocking'
 
 describe('Electron Testing', () => {
   before(async () => {
-    await ObsidianApp.removeE2eTestVaultIfExists()
-    await ObsidianApp.createAndOpenFreshVault()
-    await ObsidianApp.activateImgurPlugin()
-
     const settings = await ObsidianApp.openSettings()
     await settings.switchToImgurSettingsTab()
     await settings.configureClientId('test-client-id')
