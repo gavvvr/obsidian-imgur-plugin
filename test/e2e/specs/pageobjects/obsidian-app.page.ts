@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises'
 
-import { App } from 'obsidian'
+import { App, EditorPosition } from 'obsidian'
 import { Key } from 'webdriverio'
 
 import { IMGUR_PLUGIN_ID, TEST_VAULT_DIR } from '../../constants'
@@ -60,12 +60,45 @@ class ObsidianApp {
     return ObsidianSettings
   }
 
+  async createNewNoteWithContent(content: string) {
+    await this.doCreateNewNote(content)
+  }
+
   async createNewNote() {
+    await this.doCreateNewNote()
+  }
+
+  private async doCreateNewNote(content?: string) {
     const newNoteButton = $('aria/New note')
     await newNoteButton.click()
 
-    const note = $('.cm-contentContainer div[role="textbox"]')
-    await note.click()
+    const noteContent = $('.workspace-leaf.mod-active .cm-contentContainer')
+    await noteContent.click()
+    if (content) {
+      await browser.execute((content: string) => {
+        // @ts-expect-error 'app' exists in Obsidian
+        declare const app: App
+        app.workspace.activeEditor!.editor!.setValue(content)
+      }, content)
+    }
+  }
+
+  async resizeToSmallThumbnailUsingCommandPalette() {
+    await this.openCommandPalette()
+    await this.fuzzySearchResizeToSmallThumbnail()
+    await this.hitEnter()
+  }
+
+  private async openCommandPalette() {
+    await browser.keys([Key.Ctrl, 'p'])
+  }
+
+  private async fuzzySearchResizeToSmallThumbnail() {
+    await browser.keys('resize small thumb')
+  }
+
+  private async hitEnter() {
+    await browser.keys(Key.Enter)
   }
 
   async getTextFromOpenedNote() {
@@ -74,6 +107,14 @@ class ObsidianApp {
       declare const app: App
       return app.workspace.activeEditor!.editor!.getValue()
     })
+  }
+
+  async setCursorPositionInActiveNote(position: EditorPosition) {
+    await browser.execute((position: EditorPosition) => {
+      // @ts-expect-error 'app' exists in Obsidian
+      declare const app: App
+      app.workspace.activeEditor!.editor!.setCursor(position)
+    }, position)
   }
 
   async loadSampleImageToClipboard() {

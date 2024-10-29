@@ -23,4 +23,20 @@ describe('Electron Testing', () => {
       await expect(noteContent).toBe('![](https://i.imgur.com/w88wB4I.png)\n')
     })
   })
+
+  context('Note with existing image', () => {
+    it('resize the image', async () => {
+      await ObsidianApp.createNewNoteWithContent('![](https://i.imgur.com/JGnCrC9.png)')
+
+      const somewhereWithinMarkdownImage = { line: 0, ch: 2 }
+      await ObsidianApp.setCursorPositionInActiveNote(somewhereWithinMarkdownImage)
+
+      await ObsidianApp.resizeToSmallThumbnailUsingCommandPalette()
+
+      const noteContent = await ObsidianApp.getTextFromOpenedNote()
+      await expect(noteContent).toBe(
+        '[![](https://i.imgur.com/JGnCrC9t.png)](https://i.imgur.com/JGnCrC9.png)',
+      )
+    })
+  })
 })
