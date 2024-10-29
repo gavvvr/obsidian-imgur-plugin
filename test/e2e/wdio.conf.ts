@@ -1,6 +1,8 @@
 /// <reference types="wdio-electron-service" />
 import ObsidianApp from './specs/pageobjects/obsidian-app.page'
 
+const debug = process.env.DEBUG
+
 export const config: WebdriverIO.Config = {
   runner: 'local',
   specs: ['./specs/*.ts'],
@@ -44,7 +46,7 @@ export const config: WebdriverIO.Config = {
   reporters: ['spec'],
   mochaOpts: {
     ui: 'bdd',
-    timeout: 60000,
+    timeout: debug ? 24 * 60 * 60 * 1000 : 60000,
   },
   beforeSuite: async () => {
     await ObsidianApp.removeE2eTestVaultIfExists()
