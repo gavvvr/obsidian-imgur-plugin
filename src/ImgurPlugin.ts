@@ -5,7 +5,6 @@ import {
   MarkdownView,
   Menu,
   Notice,
-  parseLinktext,
   Plugin,
   ReferenceCache,
   TFile,
@@ -16,7 +15,6 @@ import UploadStrategy from './UploadStrategy'
 import DragEventCopy from './aux-event-classes/DragEventCopy'
 import PasteEventCopy from './aux-event-classes/PasteEventCopy'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
-import { IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS } from './imgur/constants'
 import ImgurSize from './imgur/resizing/ImgurSize'
 import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
 import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
@@ -28,7 +26,7 @@ import ImageUploader from './uploader/ImageUploader'
 import buildUploaderFrom from './uploader/imgUploaderFactory'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
 import { allFilesAreImages } from './utils/FileList'
-import { localEmbeddedImageExpectedBoundaries } from './utils/editor'
+import { findLocalFileUnderCursor } from './utils/editor'
 import { fixImageTypeIfNeeded } from './utils/misc'
 
 declare module 'obsidian' {
@@ -70,6 +68,16 @@ const DEFAULT_SETTINGS: ImgurPluginSettings = {
   clientId: null,
   showRemoteUploadConfirmation: true,
   albumToUpload: undefined,
+}
+
+interface LocalImageInEditor {
+  image: {
+    file: TFile
+    start: EditorPosition
+    end: EditorPosition
+  }
+  editor: Editor
+  noteFile: TFile
 }
 
 export default class ImgurPlugin extends Plugin {
@@ -195,40 +203,24 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private imgurPluginRightClickHandler = (menu: Menu, editor: Editor, view: MarkdownView) => {
-    const clickable = editor.getClickableTokenAt(editor.getCursor())
-
-    if (!clickable) return
-    if (clickable.type !== 'internal-link') return
-
-    const [localImageExpectedStart, localImageExpectedEnd] =
-      localEmbeddedImageExpectedBoundaries(clickable)
-
-    const clickablePrefix = editor.getRange(localImageExpectedStart, clickable.start)
-    const clickableSuffix = editor.getRange(clickable.end, localImageExpectedEnd)
-    if (clickablePrefix !== '![[' || clickableSuffix !== ']]') return
-
-    const lt = parseLinktext(clickable.text)
-    const file = view.app.metadataCache.getFirstLinkpathDest(lt.path, view.file.path)
-
-    if (!IMGUR_POTENTIALLY_SUPPORTED_FILES_EXTENSIONS.includes(file.extension)) return
+    const localFile = findLocalFileUnderCursor(editor, view)
+    if (!localFile) return
 
     menu.addItem((item) => {
       item
         .setTitle('Upload to Imgur')
         .setIcon('wand')
-        .onClick(() =>
-          this.uploadLocalImageFromEditor(
-            editor,
-            file,
-            localImageExpectedStart,
-            localImageExpectedEnd,
-          ).then((imageUrl) =>
-            this.proposeToReplaceOtherLocalLinksIfAny(file, imageUrl, {
-              path: view.file.path,
-              startPosition: localImageExpectedStart,
-            }),
-          ),
-        )
+        .onClick(() => this.doUploadLocalImage({ image: localFile, editor, noteFile: view.file }))
+    })
+  }
+
+  private async doUploadLocalImage(imageInEditor: LocalImageInEditor) {
+    const { image, editor, noteFile } = imageInEditor
+    const { file: imageFile, start, end } = image
+    const imageUrl = await this.uploadLocalImageFromEditor(editor, imageFile, start, end)
+    this.proposeToReplaceOtherLocalLinksIfAny(imageFile, imageUrl, {
+      path: noteFile.path,
+      startPosition: start,
     })
   }
 
