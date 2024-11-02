@@ -6,6 +6,11 @@ import { Key } from 'webdriverio'
 import { IMGUR_PLUGIN_ID, TEST_VAULT_DIR } from '../../constants'
 import ObsidianSettings from './obsidian-settings.page'
 
+const EXAMPLE_PNG_IMAGE_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+' +
+  'l2Z/dAAAAM0lEQVR4nGP4/5/h/1+' +
+  'G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC'
+
 class ObsidianApp {
   async removeE2eTestVaultIfExists() {
     await fs.rm(TEST_VAULT_DIR, { force: true, recursive: true })
@@ -118,17 +123,13 @@ class ObsidianApp {
   }
 
   async loadSampleImageToClipboard() {
-    await browser.execute(() => {
+    await browser.execute((imageBase64: string) => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { nativeImage, clipboard } = require('electron')
-      const imageBase64 =
-        'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+' +
-        'l2Z/dAAAAM0lEQVR4nGP4/5/h/1+' +
-        'G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC'
       const dataUrl = 'data:image/png;base64,' + imageBase64
       const sampleImage = nativeImage.createFromDataURL(dataUrl)
       clipboard.writeImage(sampleImage)
-    })
+    }, EXAMPLE_PNG_IMAGE_BASE64)
   }
 
   async pasteFromClipboard() {
