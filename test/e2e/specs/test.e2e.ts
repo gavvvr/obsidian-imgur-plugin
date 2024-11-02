@@ -24,7 +24,7 @@ describe('Electron Testing', () => {
     })
   })
 
-  context('Note with existing image', () => {
+  context('Note with existing imgur image', () => {
     it('resize the image', async () => {
       await ObsidianApp.createNewNoteWithContent('![](https://i.imgur.com/JGnCrC9.png)')
 
@@ -37,6 +37,27 @@ describe('Electron Testing', () => {
       await expect(noteContent).toBe(
         '[![](https://i.imgur.com/JGnCrC9t.png)](https://i.imgur.com/JGnCrC9.png)',
       )
+    })
+  })
+
+  context('Note with existing local image', () => {
+    it('resize the image', async () => {
+      await ObsidianApp.putExampleImageToVault('example-local-image.png')
+      await ObsidianApp.createNewNoteWithContent('![[example-local-image.png]]')
+      await MockingUtils.mockUploadedImageUrl('https://i.imgur.com/sXTI69E.png')
+
+      const somewhereWithinMarkdownImage = { line: 0, ch: 5 }
+      await ObsidianApp.setCursorPositionInActiveNote(somewhereWithinMarkdownImage)
+
+      await ObsidianApp.uploadToImgurUsingCommandPalette()
+
+      const noteContent = await ObsidianApp.getTextFromOpenedNote()
+      const expectedContent = [
+        '<!--![[example-local-image.png]]-->',
+        '![](https://i.imgur.com/sXTI69E.png)',
+        '',
+      ].join('\n')
+      await expect(noteContent).toBe(expectedContent)
     })
   })
 })

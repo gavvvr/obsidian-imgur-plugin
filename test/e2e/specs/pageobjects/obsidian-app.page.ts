@@ -1,4 +1,5 @@
 import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
 
 import { App, EditorPosition } from 'obsidian'
 import { Key } from 'webdriverio'
@@ -94,6 +95,12 @@ class ObsidianApp {
     await this.hitEnter()
   }
 
+  async uploadToImgurUsingCommandPalette() {
+    await this.openCommandPalette()
+    await browser.keys('Upload to Imgur')
+    await this.hitEnter()
+  }
+
   private async openCommandPalette() {
     await browser.keys([Key.Ctrl, 'p'])
   }
@@ -130,6 +137,11 @@ class ObsidianApp {
       const sampleImage = nativeImage.createFromDataURL(dataUrl)
       clipboard.writeImage(sampleImage)
     }, EXAMPLE_PNG_IMAGE_BASE64)
+  }
+
+  async putExampleImageToVault(pathRelativeToVault: string) {
+    const imageBuffer = Buffer.from(EXAMPLE_PNG_IMAGE_BASE64, 'base64')
+    await fs.writeFile(path.join(TEST_VAULT_DIR, pathRelativeToVault), imageBuffer)
   }
 
   async pasteFromClipboard() {
