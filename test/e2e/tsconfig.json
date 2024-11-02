@@ -11,7 +11,8 @@
       "node",
       "@wdio/globals/types",
       "expect-webdriverio",
-      "@wdio/mocha-framework"
+      "@wdio/mocha-framework",
+      "wdio-electron-service"
     ],
     "skipLibCheck": true,
     "noEmit": true,
