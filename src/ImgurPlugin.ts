@@ -2,6 +2,7 @@ import {
   CanvasView,
   Editor,
   EditorPosition,
+  MarkdownFileInfo,
   MarkdownView,
   Menu,
   Notice,
@@ -357,6 +358,7 @@ export default class ImgurPlugin extends Plugin {
     this.setupImagesUploader()
     this.setupImgurHandlers()
     this.addResizingCommands()
+    this.addUploadLocalCommand()
   }
 
   setupImagesUploader(): void {
@@ -402,6 +404,26 @@ export default class ImgurPlugin extends Plugin {
         editorCheckCallback: editorCheckCallbackFor(size),
       })
     }
+  }
+
+  private addUploadLocalCommand() {
+    this.addCommand({
+      id: 'imgur-upload-local',
+      name: 'Upload to Imgur',
+      editorCheckCallback: this.editorCheckCallbackForLocalUpload,
+    })
+  }
+
+  private editorCheckCallbackForLocalUpload = (
+    checking: boolean,
+    editor: Editor,
+    ctx: MarkdownFileInfo,
+  ) => {
+    const localFile = findLocalFileUnderCursor(editor, ctx)
+    if (!localFile) return false
+    if (checking) return true
+
+    void this.doUploadLocalImage({ image: localFile, editor, noteFile: ctx.file })
   }
 
   getAuthenticatedImgurClient(): AuthenticatedImgurClient | null {
