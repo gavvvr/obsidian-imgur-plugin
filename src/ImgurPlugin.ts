@@ -31,33 +31,6 @@ import { allFilesAreImages } from './utils/FileList'
 import { findLocalFileUnderCursor } from './utils/editor'
 import { fixImageTypeIfNeeded } from './utils/misc'
 
-declare module 'obsidian' {
-  interface MarkdownSubView {
-    clipboardManager: ClipboardManager
-  }
-
-  interface CanvasView extends TextFileView {
-    handlePaste: (e: ClipboardEvent) => Promise<void>
-  }
-
-  interface Editor {
-    getClickableTokenAt(position: EditorPosition): ClickableToken | null
-  }
-
-  interface ClickableToken {
-    displayText: string
-    text: string
-    type: string
-    start: EditorPosition
-    end: EditorPosition
-  }
-}
-
-interface ClipboardManager {
-  handlePaste(e: ClipboardEvent): void
-  handleDrop(e: DragEvent): void
-}
-
 export interface ImgurPluginSettings {
   uploadStrategy: UploadStrategy
   clientId: string

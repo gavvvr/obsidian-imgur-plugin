@@ -84,16 +84,3 @@ function pasteRemoteImageToCanvas(canvas: Canvas, imageUrl: string) {
     text: `![](${imageUrl})`,
   })
 }
-
-declare module 'obsidian' {
-  interface Canvas {
-    posCenter(): Point
-    createTextNode(n: NewTextNode): any
-  }
-
-  interface NewTextNode {
-    pos: Point
-    position: string
-    text: string
-  }
-}
