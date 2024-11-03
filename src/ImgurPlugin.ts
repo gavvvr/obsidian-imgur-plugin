@@ -408,7 +408,7 @@ export default class ImgurPlugin extends Plugin {
 
     let imgUrl: string
     try {
-      imgUrl = await this.imgUploaderField.upload(file, this._settings.albumToUpload)
+      imgUrl = await this.imgUploader.upload(file, this._settings.albumToUpload)
     } catch (e) {
       if (e instanceof ApiError) {
         this.handleFailedUpload(
