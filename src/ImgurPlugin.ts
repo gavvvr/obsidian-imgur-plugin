@@ -29,6 +29,7 @@ import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploa
 import { allFilesAreImages } from './utils/FileList'
 import { findLocalFileUnderCursor, replaceFirstOccurrence } from './utils/editor'
 import { fixImageTypeIfNeeded } from './utils/misc'
+import { generatePseudoRandomId } from './utils/pseudo-random'
 
 interface LocalImageInEditor {
   image: {
@@ -399,7 +400,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private async uploadFileAndEmbedImgurImage(file: File, atPos?: EditorPosition) {
-    const pasteId = (Math.random() + 1).toString(36).substring(2, 7)
+    const pasteId = generatePseudoRandomId()
     this.insertTemporaryText(pasteId, atPos)
 
     let imgUrl: string
