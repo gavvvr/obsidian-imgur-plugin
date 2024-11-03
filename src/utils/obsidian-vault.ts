@@ -1,4 +1,4 @@
-import { MetadataCache, ReferenceCache, TFile } from 'obsidian'
+import { MetadataCache, ReferenceCache, TFile, Vault } from 'obsidian'
 
 export const getAllCachedReferencesForFile = (metadataCache: MetadataCache) => (file: TFile) => {
   const allLinks = metadataCache.resolvedLinks
@@ -28,5 +28,32 @@ export const filesAndLinksStatsFrom = (referencesByNote: Record<string, Referenc
   return {
     filesCount: Object.keys(referencesByNote).length,
     linksCount: Object.values(referencesByNote).reduce((count, refs) => count + refs.length, 0),
+  }
+}
+
+export const replaceAllLocalReferencesWithRemoteOne = async (
+  vault: Vault,
+  allFileReferencesByNotes: Record<string, ReferenceCache[]>,
+  remoteImageUrl: string,
+) => {
+  for (const [notePath, refs] of Object.entries(allFileReferencesByNotes)) {
+    const noteFile = vault.getFileByPath(notePath)
+    const refsStartOffsetsSortedDescending = refs
+      .map((ref) => ({
+        start: ref.position.start.offset,
+        end: ref.position.end.offset,
+      }))
+      .sort((ref1, ref2) => ref2.start - ref1.start)
+
+    await vault.process(noteFile, (noteContent) => {
+      let updatedContent = noteContent
+      refsStartOffsetsSortedDescending.forEach((refPos) => {
+        updatedContent =
+          updatedContent.substring(0, refPos.start) +
+          `![](${remoteImageUrl})` +
+          updatedContent.substring(refPos.end)
+      })
+      return updatedContent
+    })
   }
 }
