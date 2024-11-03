@@ -144,7 +144,7 @@ export default class ImgurPlugin extends Plugin {
 
     // Adding newline to avoid messing images pasted via default handler
     // with any text added by the plugin
-    this.getEditor().replaceSelection('\n')
+    this.activeEditor.replaceSelection('\n')
 
     const promises: Promise<any>[] = []
     const filesFailedToUpload: File[] = []
@@ -424,11 +424,11 @@ export default class ImgurPlugin extends Plugin {
   private insertTemporaryText(pasteId: string, atPos?: EditorPosition) {
     const progressText = ImgurPlugin.progressTextFor(pasteId)
     const replacement = `${progressText}\n`
-    const editor = this.getEditor()
+    const editor = this.activeEditor
     if (atPos) {
       editor.replaceRange(replacement, atPos, atPos)
     } else {
-      this.getEditor().replaceSelection(replacement)
+      this.activeEditor.replaceSelection(replacement)
     }
   }
 
@@ -440,15 +440,15 @@ export default class ImgurPlugin extends Plugin {
     const progressText = ImgurPlugin.progressTextFor(pasteId)
     const markDownImage = `![](${imageUrl})`
 
-    replaceFirstOccurrence(this.getEditor(), progressText, markDownImage)
+    replaceFirstOccurrence(this.activeEditor, progressText, markDownImage)
   }
 
   private handleFailedUpload(pasteId: string, message: string) {
     const progressText = ImgurPlugin.progressTextFor(pasteId)
-    replaceFirstOccurrence(this.getEditor(), progressText, `<!--${message}-->`)
+    replaceFirstOccurrence(this.activeEditor, progressText, `<!--${message}-->`)
   }
 
-  private getEditor(): Editor {
+  private get activeEditor(): Editor {
     const mdView = this.app.workspace.getActiveViewOfType(MarkdownView)
     return mdView.editor
   }
