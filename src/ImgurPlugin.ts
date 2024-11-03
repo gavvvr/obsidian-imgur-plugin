@@ -415,7 +415,7 @@ export default class ImgurPlugin extends Plugin {
     if (atPos) {
       editor.replaceRange(replacement, atPos, atPos)
     } else {
-      this.activeEditor.replaceSelection(replacement)
+      editor.replaceSelection(replacement)
     }
   }
 
