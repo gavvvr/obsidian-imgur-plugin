@@ -47,10 +47,10 @@ export default class ImgurPlugin extends Plugin {
     return this._settings
   }
 
-  private imgUploaderField: ImageUploader
+  private _imgUploader: ImageUploader
 
   get imgUploader(): ImageUploader {
-    return this.imgUploaderField
+    return this._imgUploader
   }
 
   private customPasteEventCallback = async (
@@ -322,7 +322,7 @@ export default class ImgurPlugin extends Plugin {
 
   setupImagesUploader(): void {
     const uploader = buildUploaderFrom(this._settings)
-    this.imgUploaderField = uploader
+    this._imgUploader = uploader
     if (!uploader) return
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
