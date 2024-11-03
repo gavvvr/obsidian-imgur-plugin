@@ -149,7 +149,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
   }
 
   private async drawAuthenticationInfo() {
-    const authenticatedClient = this.plugin.getAuthenticatedImgurClient()
+    const authenticatedClient = this.plugin.authenticatedImgurClient
     if (!authenticatedClient) {
       this.authElem.setNotAuthenticated()
       return
@@ -184,7 +184,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
       d.onChange((value) => {
         if (value === '＋') {
           const handler = async (name: string, description?: string) => {
-            const client = this.plugin.getAuthenticatedImgurClient()
+            const client = this.plugin.authenticatedImgurClient
             try {
               const resp = await client.createNewAlbum(name, description)
               if (resp.success === true) {
@@ -229,7 +229,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
   }
 
   private async populateList(d: DropdownComponent) {
-    const client = this.plugin.getAuthenticatedImgurClient()
+    const client = this.plugin.authenticatedImgurClient
     const albums = (await client.listAlbums()).data
 
     albums.sort((a1, a2) => a1.datetime - a2.datetime)

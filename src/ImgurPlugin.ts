@@ -389,7 +389,7 @@ export default class ImgurPlugin extends Plugin {
     void this.doUploadLocalImage({ image: localFile, editor, noteFile: ctx.file })
   }
 
-  getAuthenticatedImgurClient(): AuthenticatedImgurClient | null {
+  get authenticatedImgurClient(): AuthenticatedImgurClient | null {
     if (this.imgUploader instanceof ImgurAuthenticatedUploader) {
       return this.imgUploader.client
     }
