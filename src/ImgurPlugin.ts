@@ -11,8 +11,9 @@ import {
   TFile,
 } from 'obsidian'
 
+import type { UploadStrategy } from './UploadStrategy'
+
 import { createImgurCanvasPasteHandler } from './Canvas'
-import UploadStrategy from './UploadStrategy'
 import DragEventCopy from './aux-event-classes/DragEventCopy'
 import PasteEventCopy from './aux-event-classes/PasteEventCopy'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
@@ -58,14 +59,14 @@ interface ClipboardManager {
 }
 
 export interface ImgurPluginSettings {
-  uploadStrategy: string
+  uploadStrategy: UploadStrategy
   clientId: string
   showRemoteUploadConfirmation: boolean
   albumToUpload: string | undefined
 }
 
 const DEFAULT_SETTINGS: ImgurPluginSettings = {
-  uploadStrategy: UploadStrategy.ANONYMOUS_IMGUR.id,
+  uploadStrategy: 'ANONYMOUS_IMGUR',
   clientId: null,
   showRemoteUploadConfirmation: true,
   albumToUpload: undefined,

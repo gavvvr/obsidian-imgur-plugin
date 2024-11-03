@@ -1,5 +1,4 @@
 import { ImgurPluginSettings } from '../ImgurPlugin'
-import UploadStrategy from '../UploadStrategy'
 import AuthenticatedImgurClient from '../imgur/AuthenticatedImgurClient'
 import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from '../imgur/constants'
 import ImageUploader from './ImageUploader'
@@ -9,7 +8,7 @@ import ImgurAuthenticatedUploader from './imgur/ImgurAuthenticatedUploader'
 export default function buildUploaderFrom(
   settings: ImgurPluginSettings,
 ): ImageUploader | undefined {
-  if (UploadStrategy.AUTHENTICATED_IMGUR.id === settings.uploadStrategy) {
+  if (settings.uploadStrategy === 'AUTHENTICATED_IMGUR') {
     const accessToken = localStorage.getItem(IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY)
 
     if (!accessToken) {
@@ -17,13 +16,14 @@ export default function buildUploaderFrom(
     }
 
     return new ImgurAuthenticatedUploader(new AuthenticatedImgurClient(accessToken))
-  }
-  if (settings.uploadStrategy === UploadStrategy.ANONYMOUS_IMGUR.id) {
+  } else if (settings.uploadStrategy === 'ANONYMOUS_IMGUR') {
     if (settings.clientId) {
       return new ImgurAnonymousUploader(settings.clientId)
     } else {
       return undefined
     }
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const exhaustiveCheck: never = settings.uploadStrategy
   }
-  throw Error('This line of code should never be reached')
 }

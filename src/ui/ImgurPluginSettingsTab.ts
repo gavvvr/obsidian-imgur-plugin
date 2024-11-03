@@ -1,7 +1,7 @@
 import { App, DropdownComponent, Notice, PluginSettingTab, Setting } from 'obsidian'
 
 import ImgurPlugin from '../ImgurPlugin'
-import UploadStrategy from '../UploadStrategy'
+import { UploadStrategies, type UploadStrategy } from '../UploadStrategy'
 import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from '../imgur/constants'
 import ApiError from '../uploader/ApiError'
 import ImgurAuthModal from './ImgurAuthModal'
@@ -56,11 +56,12 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     this.strategyDiv = containerEl.createDiv()
 
     new Setting(uploadApproachDiv).setName('Images upload approach').addDropdown((dropdown) => {
-      UploadStrategy.values.forEach((s) => {
-        dropdown.addOption(s.id, s.description)
-      })
+      let key: keyof typeof UploadStrategies
+      for (key in UploadStrategies) {
+        dropdown.addOption(key, UploadStrategies[key])
+      }
       dropdown.setValue(this.plugin.settings.uploadStrategy)
-      dropdown.onChange(async (v) => {
+      dropdown.onChange(async (v: UploadStrategy) => {
         this.plugin.settings.uploadStrategy = v
         this.plugin.setupImagesUploader()
         await this.drawSettings(this.strategyDiv)
@@ -84,7 +85,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
   private async drawSettings(parentEl: HTMLElement) {
     parentEl.empty()
     this.drawClientIdField(parentEl)
-    if (this.plugin.settings.uploadStrategy === UploadStrategy.AUTHENTICATED_IMGUR.id) {
+    if (this.plugin.settings.uploadStrategy === 'AUTHENTICATED_IMGUR') {
       await this.createAuthenticationInfoBlock(parentEl)
 
       if (this.authenticatedUserName) this.drawAlbumSettings(parentEl)
