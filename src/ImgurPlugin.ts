@@ -28,7 +28,7 @@ import buildUploaderFrom from './uploader/imgUploaderFactory'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
 import { allFilesAreImages } from './utils/FileList'
 import { findLocalFileUnderCursor, replaceFirstOccurrence } from './utils/editor'
-import { fixImageTypeIfNeeded } from './utils/misc'
+import { fixImageTypeIfNeeded, removeReferenceIfPresent } from './utils/misc'
 import { getAllCachedReferencesForFile } from './utils/obsidian-vault'
 import { generatePseudoRandomId } from './utils/pseudo-random'
 
@@ -196,7 +196,7 @@ export default class ImgurPlugin extends Plugin {
     originalReference: { path: string; startPosition: EditorPosition },
   ) {
     const otherReferencesByNote = this.getAllCachedReferencesForFile(originalLocalFile)
-    removeReferenceToOriginalNoteIfPresent(otherReferencesByNote, originalReference)
+    this.removeReferenceToOriginalNoteIfPresent(otherReferencesByNote, originalReference)
 
     const notesWithSameLocalFile = Object.keys(otherReferencesByNote)
     if (notesWithSameLocalFile.length === 0) return
@@ -207,6 +207,11 @@ export default class ImgurPlugin extends Plugin {
   private getAllCachedReferencesForFile(file: TFile) {
     return getAllCachedReferencesForFile(this.app.metadataCache)(file)
   }
+
+  private removeReferenceToOriginalNoteIfPresent = (
+    referencesByNote: Record<string, ReferenceCache[]>,
+    originalNoteRef: { path: string; startPosition: EditorPosition },
+  ) => removeReferenceIfPresent(referencesByNote, originalNoteRef)
 
   private showLinksUpdateDialog(
     localFile: TFile,
@@ -433,27 +438,6 @@ export default class ImgurPlugin extends Plugin {
   private get activeEditor(): Editor {
     const mdView = this.app.workspace.getActiveViewOfType(MarkdownView)
     return mdView.editor
-  }
-}
-
-function removeReferenceToOriginalNoteIfPresent(
-  otherReferencesByNote: Record<string, ReferenceCache[]>,
-  originalNote: { path: string; startPosition: EditorPosition },
-) {
-  if (!Object.keys(otherReferencesByNote).includes(originalNote.path)) return
-
-  const refsFromOriginalNote = otherReferencesByNote[originalNote.path]
-  const originalRefStart = originalNote.startPosition
-  const refForExclusion = refsFromOriginalNote.find(
-    (r) =>
-      r.position.start.line === originalRefStart.line &&
-      r.position.start.col === originalRefStart.ch,
-  )
-  if (refForExclusion) {
-    refsFromOriginalNote.remove(refForExclusion)
-    if (refsFromOriginalNote.length === 0) {
-      delete otherReferencesByNote[originalNote.path]
-    }
   }
 }
 
