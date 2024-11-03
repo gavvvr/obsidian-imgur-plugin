@@ -11,14 +11,13 @@ import {
   TFile,
 } from 'obsidian'
 
-import type { UploadStrategy } from './UploadStrategy'
-
 import { createImgurCanvasPasteHandler } from './Canvas'
 import DragEventCopy from './aux-event-classes/DragEventCopy'
 import PasteEventCopy from './aux-event-classes/PasteEventCopy'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
 import ImgurSize from './imgur/resizing/ImgurSize'
 import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
+import { DEFAULT_SETTINGS, ImgurPluginSettings } from './plugin-settings'
 import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
 import InfoModal from './ui/InfoModal'
 import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
@@ -30,20 +29,6 @@ import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploa
 import { allFilesAreImages } from './utils/FileList'
 import { findLocalFileUnderCursor } from './utils/editor'
 import { fixImageTypeIfNeeded } from './utils/misc'
-
-export interface ImgurPluginSettings {
-  uploadStrategy: UploadStrategy
-  clientId: string
-  showRemoteUploadConfirmation: boolean
-  albumToUpload: string | undefined
-}
-
-const DEFAULT_SETTINGS: ImgurPluginSettings = {
-  uploadStrategy: 'ANONYMOUS_IMGUR',
-  clientId: null,
-  showRemoteUploadConfirmation: true,
-  albumToUpload: undefined,
-}
 
 interface LocalImageInEditor {
   image: {
