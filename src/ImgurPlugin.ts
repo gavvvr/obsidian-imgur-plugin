@@ -325,7 +325,7 @@ export default class ImgurPlugin extends Plugin {
     this.registerEvent(this.app.workspace.on('editor-drop', this.customDropEventListener))
     this.registerEvent(
       this.app.workspace.on('active-leaf-change', (leaf) => {
-        const view = leaf.view
+        const { view } = leaf
 
         if (view.getViewType() === 'canvas') {
           this.overridePasteHandlerForCanvasView(view as CanvasView)
