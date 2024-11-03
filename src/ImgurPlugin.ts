@@ -41,7 +41,11 @@ interface LocalImageInEditor {
 }
 
 export default class ImgurPlugin extends Plugin {
-  settings: ImgurPluginSettings
+  _settings: ImgurPluginSettings
+
+  get settings() {
+    return this._settings
+  }
 
   private imgUploaderField: ImageUploader
 
@@ -67,7 +71,7 @@ export default class ImgurPlugin extends Plugin {
 
     e.preventDefault()
 
-    if (this.settings.showRemoteUploadConfirmation) {
+    if (this._settings.showRemoteUploadConfirmation) {
       const modal = new RemoteUploadConfirmationDialog(this.app)
       modal.open()
 
@@ -77,7 +81,7 @@ export default class ImgurPlugin extends Plugin {
           return
         case true:
           if (userResp.alwaysUpload) {
-            this.settings.showRemoteUploadConfirmation = false
+            this._settings.showRemoteUploadConfirmation = false
             void this.saveSettings()
           }
           break
@@ -115,7 +119,7 @@ export default class ImgurPlugin extends Plugin {
 
     e.preventDefault()
 
-    if (this.settings.showRemoteUploadConfirmation) {
+    if (this._settings.showRemoteUploadConfirmation) {
       const modal = new RemoteUploadConfirmationDialog(this.app)
       modal.open()
 
@@ -125,7 +129,7 @@ export default class ImgurPlugin extends Plugin {
           return
         case true:
           if (userResp.alwaysUpload) {
-            this.settings.showRemoteUploadConfirmation = false
+            this._settings.showRemoteUploadConfirmation = false
             void this.saveSettings()
           }
           break
@@ -296,14 +300,14 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private async loadSettings() {
-    this.settings = {
+    this._settings = {
       ...DEFAULT_SETTINGS,
       ...((await this.loadData()) as ImgurPluginSettings),
     }
   }
 
   async saveSettings(): Promise<void> {
-    await this.saveData(this.settings)
+    await this.saveData(this._settings)
   }
 
   onload() {
@@ -321,7 +325,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   setupImagesUploader(): void {
-    const uploader = buildUploaderFrom(this.settings)
+    const uploader = buildUploaderFrom(this._settings)
     this.imgUploaderField = uploader
     if (!uploader) return
 
@@ -404,7 +408,7 @@ export default class ImgurPlugin extends Plugin {
 
     let imgUrl: string
     try {
-      imgUrl = await this.imgUploaderField.upload(file, this.settings.albumToUpload)
+      imgUrl = await this.imgUploaderField.upload(file, this._settings.albumToUpload)
     } catch (e) {
       if (e instanceof ApiError) {
         this.handleFailedUpload(
