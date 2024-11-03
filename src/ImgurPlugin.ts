@@ -49,7 +49,7 @@ export default class ImgurPlugin extends Plugin {
 
   private imgUploaderField: ImageUploader
 
-  getCurrentImagesUploader(): ImageUploader {
+  get imgUploader(): ImageUploader {
     return this.imgUploaderField
   }
 
@@ -293,10 +293,6 @@ export default class ImgurPlugin extends Plugin {
     })
     editor.replaceRange(`<!--${editor.getRange(start, end)}-->`, start, end)
     return imageUrl
-  }
-
-  get imgUploader(): ImageUploader {
-    return this.imgUploaderField
   }
 
   private async loadSettings() {
