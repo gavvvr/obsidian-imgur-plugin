@@ -27,7 +27,7 @@ import ImageUploader from './uploader/ImageUploader'
 import buildUploaderFrom from './uploader/imgUploaderFactory'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
 import { allFilesAreImages } from './utils/FileList'
-import { findLocalFileUnderCursor } from './utils/editor'
+import { findLocalFileUnderCursor, replaceFirstOccurrence } from './utils/editor'
 import { fixImageTypeIfNeeded } from './utils/misc'
 
 interface LocalImageInEditor {
@@ -440,30 +440,17 @@ export default class ImgurPlugin extends Plugin {
     const progressText = ImgurPlugin.progressTextFor(pasteId)
     const markDownImage = `![](${imageUrl})`
 
-    ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, markDownImage)
+    replaceFirstOccurrence(this.getEditor(), progressText, markDownImage)
   }
 
   private handleFailedUpload(pasteId: string, message: string) {
     const progressText = ImgurPlugin.progressTextFor(pasteId)
-    ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, `<!--${message}-->`)
+    replaceFirstOccurrence(this.getEditor(), progressText, `<!--${message}-->`)
   }
 
   private getEditor(): Editor {
     const mdView = this.app.workspace.getActiveViewOfType(MarkdownView)
     return mdView.editor
-  }
-
-  private static replaceFirstOccurrence(editor: Editor, target: string, replacement: string) {
-    const lines = editor.getValue().split('\n')
-    for (let i = 0; i < lines.length; i += 1) {
-      const ch = lines[i].indexOf(target)
-      if (ch !== -1) {
-        const from = { line: i, ch }
-        const to = { line: i, ch: ch + target.length }
-        editor.replaceRange(replacement, from, to)
-        break
-      }
-    }
   }
 }
 
