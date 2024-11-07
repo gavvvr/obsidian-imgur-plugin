@@ -5,6 +5,7 @@ import { App, EditorPosition } from 'obsidian'
 import { Key } from 'webdriverio'
 
 import { IMGUR_PLUGIN_ID, TEST_VAULT_DIR } from '../../constants'
+import CanvasCard from './canvas-card.page'
 import ObsidianSettings from './obsidian-settings.page'
 
 const EXAMPLE_PNG_IMAGE_BASE64 =
@@ -68,6 +69,16 @@ class ObsidianApp {
 
   async createNewNoteWithContent(content: string) {
     await this.doCreateNewNote(content)
+  }
+
+  async createNewEmptyCanvas() {
+    await $('aria/Create new canvas').click()
+    await $('.workspace-leaf.mod-active .view-content').click()
+  }
+
+  async findAndSwitchToCanvasCard() {
+    await browser.switchFrame(await $('iframe').getElement())
+    return CanvasCard
   }
 
   async createNewNote() {
