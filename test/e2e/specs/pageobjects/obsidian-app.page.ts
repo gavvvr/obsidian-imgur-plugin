@@ -18,6 +18,16 @@ class ObsidianApp {
     await fs.rm(TEST_VAULT_DIR, { force: true, recursive: true })
   }
 
+  async openDevTools() {
+    await browser.execute(() => {
+      /* eslint-disable */
+      // @ts-ignore
+      const electronWindow = require('electron').remote.BrowserWindow.getFocusedWindow()
+      electronWindow.openDevTools({ mode: 'bottom' })
+      /* eslint-enable */
+    })
+  }
+
   async createAndOpenFreshVault() {
     await browser.execute((testVaultDir: string) => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports

@@ -52,5 +52,6 @@ export const config: WebdriverIO.Config = {
     await ObsidianApp.removeE2eTestVaultIfExists()
     await ObsidianApp.createAndOpenFreshVault()
     await ObsidianApp.activateImgurPlugin()
+    if (debug) await ObsidianApp.openDevTools()
   },
 }
