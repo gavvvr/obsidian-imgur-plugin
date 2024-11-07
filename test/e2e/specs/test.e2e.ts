@@ -60,4 +60,19 @@ describe('Electron Testing', () => {
       await expect(noteContent).toBe(expectedContent)
     })
   })
+
+  context('blank canvas', () => {
+    it('uploads clipboard image on PASTE shortcut', async () => {
+      await MockingUtils.mockUploadedImageUrl('https://i.imgur.com/QRHZ1pO.png')
+      await ObsidianApp.createNewEmptyCanvas()
+
+      await ObsidianApp.loadSampleImageToClipboard()
+      await ObsidianApp.pasteFromClipboard()
+      await ObsidianApp.confirmUpload()
+
+      const canvasCard = await ObsidianApp.findAndSwitchToCanvasCard()
+      const canvasCardText = await canvasCard.getText()
+      await expect(canvasCardText).toBe('![](https://i.imgur.com/QRHZ1pO.png)')
+    })
+  })
 })
