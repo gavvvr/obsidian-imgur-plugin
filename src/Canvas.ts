@@ -60,8 +60,7 @@ function uploadImageOnCanvas(canvas: Canvas, plugin: ImgurPlugin, e: ClipboardEv
   modal.open()
 
   const file = e.clipboardData.files[0]
-  return plugin
-    .getCurrentImagesUploader()
+  return plugin.imgUploader
     .upload(file, plugin.settings.albumToUpload)
     .then((url) => {
       if (!modal.isOpen) {
@@ -83,17 +82,4 @@ function pasteRemoteImageToCanvas(canvas: Canvas, imageUrl: string) {
     position: 'center',
     text: `![](${imageUrl})`,
   })
-}
-
-declare module 'obsidian' {
-  interface Canvas {
-    posCenter(): Point
-    createTextNode(n: NewTextNode): any
-  }
-
-  interface NewTextNode {
-    pos: Point
-    position: string
-    text: string
-  }
 }

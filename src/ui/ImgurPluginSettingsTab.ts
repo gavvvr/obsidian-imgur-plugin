@@ -1,7 +1,7 @@
 import { App, DropdownComponent, Notice, PluginSettingTab, Setting } from 'obsidian'
 
 import ImgurPlugin from '../ImgurPlugin'
-import UploadStrategy from '../UploadStrategy'
+import { UploadStrategies, type UploadStrategy } from '../UploadStrategy'
 import { IMGUR_ACCESS_TOKEN_LOCALSTORAGE_KEY } from '../imgur/constants'
 import ApiError from '../uploader/ApiError'
 import ImgurAuthModal from './ImgurAuthModal'
@@ -56,11 +56,12 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     this.strategyDiv = containerEl.createDiv()
 
     new Setting(uploadApproachDiv).setName('Images upload approach').addDropdown((dropdown) => {
-      UploadStrategy.values.forEach((s) => {
-        dropdown.addOption(s.id, s.description)
-      })
+      let key: keyof typeof UploadStrategies
+      for (key in UploadStrategies) {
+        dropdown.addOption(key, UploadStrategies[key])
+      }
       dropdown.setValue(this.plugin.settings.uploadStrategy)
-      dropdown.onChange(async (v) => {
+      dropdown.onChange(async (v: UploadStrategy) => {
         this.plugin.settings.uploadStrategy = v
         this.plugin.setupImagesUploader()
         await this.drawSettings(this.strategyDiv)
@@ -84,7 +85,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
   private async drawSettings(parentEl: HTMLElement) {
     parentEl.empty()
     this.drawClientIdField(parentEl)
-    if (this.plugin.settings.uploadStrategy === UploadStrategy.AUTHENTICATED_IMGUR.id) {
+    if (this.plugin.settings.uploadStrategy === 'AUTHENTICATED_IMGUR') {
       await this.createAuthenticationInfoBlock(parentEl)
 
       if (this.authenticatedUserName) this.drawAlbumSettings(parentEl)
@@ -148,7 +149,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
   }
 
   private async drawAuthenticationInfo() {
-    const authenticatedClient = this.plugin.getAuthenticatedImgurClient()
+    const authenticatedClient = this.plugin.authenticatedImgurClient
     if (!authenticatedClient) {
       this.authElem.setNotAuthenticated()
       return
@@ -183,7 +184,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
       d.onChange((value) => {
         if (value === '＋') {
           const handler = async (name: string, description?: string) => {
-            const client = this.plugin.getAuthenticatedImgurClient()
+            const client = this.plugin.authenticatedImgurClient
             try {
               const resp = await client.createNewAlbum(name, description)
               if (resp.success === true) {
@@ -228,7 +229,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
   }
 
   private async populateList(d: DropdownComponent) {
-    const client = this.plugin.getAuthenticatedImgurClient()
+    const client = this.plugin.authenticatedImgurClient
     const albums = (await client.listAlbums()).data
 
     albums.sort((a1, a2) => a1.datetime - a2.datetime)

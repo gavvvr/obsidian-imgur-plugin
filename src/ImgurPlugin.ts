@@ -12,12 +12,12 @@ import {
 } from 'obsidian'
 
 import { createImgurCanvasPasteHandler } from './Canvas'
-import UploadStrategy from './UploadStrategy'
 import DragEventCopy from './aux-event-classes/DragEventCopy'
 import PasteEventCopy from './aux-event-classes/PasteEventCopy'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
 import ImgurSize from './imgur/resizing/ImgurSize'
 import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
+import { DEFAULT_SETTINGS, ImgurPluginSettings } from './plugin-settings'
 import ImgurPluginSettingsTab from './ui/ImgurPluginSettingsTab'
 import InfoModal from './ui/InfoModal'
 import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
@@ -27,49 +27,14 @@ import ImageUploader from './uploader/ImageUploader'
 import buildUploaderFrom from './uploader/imgUploaderFactory'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
 import { allFilesAreImages } from './utils/FileList'
-import { findLocalFileUnderCursor } from './utils/editor'
-import { fixImageTypeIfNeeded } from './utils/misc'
-
-declare module 'obsidian' {
-  interface MarkdownSubView {
-    clipboardManager: ClipboardManager
-  }
-
-  interface CanvasView extends TextFileView {
-    handlePaste: (e: ClipboardEvent) => Promise<void>
-  }
-
-  interface Editor {
-    getClickableTokenAt(position: EditorPosition): ClickableToken | null
-  }
-
-  interface ClickableToken {
-    displayText: string
-    text: string
-    type: string
-    start: EditorPosition
-    end: EditorPosition
-  }
-}
-
-interface ClipboardManager {
-  handlePaste(e: ClipboardEvent): void
-  handleDrop(e: DragEvent): void
-}
-
-export interface ImgurPluginSettings {
-  uploadStrategy: string
-  clientId: string
-  showRemoteUploadConfirmation: boolean
-  albumToUpload: string | undefined
-}
-
-const DEFAULT_SETTINGS: ImgurPluginSettings = {
-  uploadStrategy: UploadStrategy.ANONYMOUS_IMGUR.id,
-  clientId: null,
-  showRemoteUploadConfirmation: true,
-  albumToUpload: undefined,
-}
+import { findLocalFileUnderCursor, replaceFirstOccurrence } from './utils/editor'
+import { fixImageTypeIfNeeded, removeReferenceIfPresent } from './utils/misc'
+import {
+  filesAndLinksStatsFrom,
+  getAllCachedReferencesForFile,
+  replaceAllLocalReferencesWithRemoteOne,
+} from './utils/obsidian-vault'
+import { generatePseudoRandomId } from './utils/pseudo-random'
 
 interface LocalImageInEditor {
   image: {
@@ -82,12 +47,16 @@ interface LocalImageInEditor {
 }
 
 export default class ImgurPlugin extends Plugin {
-  settings: ImgurPluginSettings
+  _settings: ImgurPluginSettings
 
-  private imgUploaderField: ImageUploader
+  get settings() {
+    return this._settings
+  }
 
-  getCurrentImagesUploader(): ImageUploader {
-    return this.imgUploaderField
+  private _imgUploader: ImageUploader
+
+  get imgUploader(): ImageUploader {
+    return this._imgUploader
   }
 
   private customPasteEventCallback = async (
@@ -108,7 +77,7 @@ export default class ImgurPlugin extends Plugin {
 
     e.preventDefault()
 
-    if (this.settings.showRemoteUploadConfirmation) {
+    if (this._settings.showRemoteUploadConfirmation) {
       const modal = new RemoteUploadConfirmationDialog(this.app)
       modal.open()
 
@@ -118,7 +87,7 @@ export default class ImgurPlugin extends Plugin {
           return
         case true:
           if (userResp.alwaysUpload) {
-            this.settings.showRemoteUploadConfirmation = false
+            this._settings.showRemoteUploadConfirmation = false
             void this.saveSettings()
           }
           break
@@ -156,7 +125,7 @@ export default class ImgurPlugin extends Plugin {
 
     e.preventDefault()
 
-    if (this.settings.showRemoteUploadConfirmation) {
+    if (this._settings.showRemoteUploadConfirmation) {
       const modal = new RemoteUploadConfirmationDialog(this.app)
       modal.open()
 
@@ -166,7 +135,7 @@ export default class ImgurPlugin extends Plugin {
           return
         case true:
           if (userResp.alwaysUpload) {
-            this.settings.showRemoteUploadConfirmation = false
+            this._settings.showRemoteUploadConfirmation = false
             void this.saveSettings()
           }
           break
@@ -181,7 +150,7 @@ export default class ImgurPlugin extends Plugin {
 
     // Adding newline to avoid messing images pasted via default handler
     // with any text added by the plugin
-    this.getEditor().replaceSelection('\n')
+    this.activeEditor.replaceSelection('\n')
 
     const promises: Promise<any>[] = []
     const filesFailedToUpload: File[] = []
@@ -231,7 +200,7 @@ export default class ImgurPlugin extends Plugin {
     originalReference: { path: string; startPosition: EditorPosition },
   ) {
     const otherReferencesByNote = this.getAllCachedReferencesForFile(originalLocalFile)
-    removeReferenceToOriginalNoteIfPresent(otherReferencesByNote, originalReference)
+    this.removeReferenceToOriginalNoteIfPresent(otherReferencesByNote, originalReference)
 
     const notesWithSameLocalFile = Object.keys(otherReferencesByNote)
     if (notesWithSameLocalFile.length === 0) return
@@ -240,41 +209,26 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private getAllCachedReferencesForFile(file: TFile) {
-    const allLinks = this.app.metadataCache.resolvedLinks
-
-    const notesWithLinks = []
-    for (const [notePath, noteLinks] of Object.entries(allLinks)) {
-      for (const [linkName] of Object.entries(noteLinks)) {
-        if (linkName === file.name) notesWithLinks.push(notePath)
-      }
-    }
-
-    const linksByNote = notesWithLinks.reduce(
-      (acc, note) => {
-        const noteMetadata = this.app.metadataCache.getCache(note)
-        const noteLinks = noteMetadata.embeds
-        if (noteLinks) {
-          acc[note] = noteLinks.filter((l) => l.link === file.name)
-        }
-        return acc
-      },
-      {} as Record<string, ReferenceCache[]>,
-    )
-    return linksByNote
+    return getAllCachedReferencesForFile(this.app.metadataCache)(file)
   }
+
+  private removeReferenceToOriginalNoteIfPresent = (
+    referencesByNote: Record<string, ReferenceCache[]>,
+    originalNoteRef: { path: string; startPosition: EditorPosition },
+  ) => removeReferenceIfPresent(referencesByNote, originalNoteRef)
 
   private showLinksUpdateDialog(
     localFile: TFile,
     remoteImageUrl: string,
     otherReferencesByNote: Record<string, ReferenceCache[]>,
   ) {
-    const stats = getFilesAndLinksStats(otherReferencesByNote)
+    const stats = filesAndLinksStatsFrom(otherReferencesByNote)
     const dialogBox = new UpdateLinksConfirmationModal(this.app, localFile.path, stats)
     dialogBox.onDoNotUpdateClick(() => dialogBox.close())
     dialogBox.onDoUpdateClick(() => {
       dialogBox.disableButtons()
       dialogBox.setContent('Working...')
-      this.replaceAllLocalReferencesWithRemoteOne(otherReferencesByNote, remoteImageUrl)
+      replaceAllLocalReferencesWithRemoteOne(this.app.vault, otherReferencesByNote, remoteImageUrl)
         .catch((e) => {
           new InfoModal(
             this.app,
@@ -287,32 +241,6 @@ export default class ImgurPlugin extends Plugin {
       new Notice(`Updated ${stats.linksCount} links in ${stats.filesCount} files`)
     })
     dialogBox.open()
-  }
-
-  private async replaceAllLocalReferencesWithRemoteOne(
-    referencesByNotes: Record<string, ReferenceCache[]>,
-    remoteImageUrl: string,
-  ) {
-    for (const [notePath, refs] of Object.entries(referencesByNotes)) {
-      const noteFile = this.app.vault.getFileByPath(notePath)
-      const refsStartOffsetsSortedDescending = refs
-        .map((ref) => ({
-          start: ref.position.start.offset,
-          end: ref.position.end.offset,
-        }))
-        .sort((ref1, ref2) => ref2.start - ref1.start)
-
-      await this.app.vault.process(noteFile, (noteContent) => {
-        let updatedContent = noteContent
-        refsStartOffsetsSortedDescending.forEach((refPos) => {
-          updatedContent =
-            updatedContent.substring(0, refPos.start) +
-            `![](${remoteImageUrl})` +
-            updatedContent.substring(refPos.end)
-        })
-        return updatedContent
-      })
-    }
   }
 
   private async uploadLocalImageFromEditor(
@@ -332,19 +260,15 @@ export default class ImgurPlugin extends Plugin {
     return imageUrl
   }
 
-  get imgUploader(): ImageUploader {
-    return this.imgUploaderField
-  }
-
   private async loadSettings() {
-    this.settings = {
+    this._settings = {
       ...DEFAULT_SETTINGS,
       ...((await this.loadData()) as ImgurPluginSettings),
     }
   }
 
   async saveSettings(): Promise<void> {
-    await this.saveData(this.settings)
+    await this.saveData(this._settings)
   }
 
   onload() {
@@ -362,8 +286,8 @@ export default class ImgurPlugin extends Plugin {
   }
 
   setupImagesUploader(): void {
-    const uploader = buildUploaderFrom(this.settings)
-    this.imgUploaderField = uploader
+    const uploader = buildUploaderFrom(this._settings)
+    this._imgUploader = uploader
     if (!uploader) return
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -379,7 +303,7 @@ export default class ImgurPlugin extends Plugin {
     this.registerEvent(this.app.workspace.on('editor-drop', this.customDropEventListener))
     this.registerEvent(
       this.app.workspace.on('active-leaf-change', (leaf) => {
-        const view = leaf.view
+        const { view } = leaf
 
         if (view.getViewType() === 'canvas') {
           this.overridePasteHandlerForCanvasView(view as CanvasView)
@@ -426,7 +350,7 @@ export default class ImgurPlugin extends Plugin {
     void this.doUploadLocalImage({ image: localFile, editor, noteFile: ctx.file })
   }
 
-  getAuthenticatedImgurClient(): AuthenticatedImgurClient | null {
+  get authenticatedImgurClient(): AuthenticatedImgurClient | null {
     if (this.imgUploader instanceof ImgurAuthenticatedUploader) {
       return this.imgUploader.client
     }
@@ -440,12 +364,12 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private async uploadFileAndEmbedImgurImage(file: File, atPos?: EditorPosition) {
-    const pasteId = (Math.random() + 1).toString(36).substring(2, 7)
+    const pasteId = generatePseudoRandomId()
     this.insertTemporaryText(pasteId, atPos)
 
     let imgUrl: string
     try {
-      imgUrl = await this.imgUploaderField.upload(file, this.settings.albumToUpload)
+      imgUrl = await this.imgUploader.upload(file, this._settings.albumToUpload)
     } catch (e) {
       if (e instanceof ApiError) {
         this.handleFailedUpload(
@@ -465,11 +389,11 @@ export default class ImgurPlugin extends Plugin {
   private insertTemporaryText(pasteId: string, atPos?: EditorPosition) {
     const progressText = ImgurPlugin.progressTextFor(pasteId)
     const replacement = `${progressText}\n`
-    const editor = this.getEditor()
+    const editor = this.activeEditor
     if (atPos) {
       editor.replaceRange(replacement, atPos, atPos)
     } else {
-      this.getEditor().replaceSelection(replacement)
+      editor.replaceSelection(replacement)
     }
   }
 
@@ -481,60 +405,16 @@ export default class ImgurPlugin extends Plugin {
     const progressText = ImgurPlugin.progressTextFor(pasteId)
     const markDownImage = `![](${imageUrl})`
 
-    ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, markDownImage)
+    replaceFirstOccurrence(this.activeEditor, progressText, markDownImage)
   }
 
   private handleFailedUpload(pasteId: string, message: string) {
     const progressText = ImgurPlugin.progressTextFor(pasteId)
-    ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, `<!--${message}-->`)
+    replaceFirstOccurrence(this.activeEditor, progressText, `<!--${message}-->`)
   }
 
-  private getEditor(): Editor {
+  private get activeEditor(): Editor {
     const mdView = this.app.workspace.getActiveViewOfType(MarkdownView)
     return mdView.editor
-  }
-
-  private static replaceFirstOccurrence(editor: Editor, target: string, replacement: string) {
-    const lines = editor.getValue().split('\n')
-    for (let i = 0; i < lines.length; i += 1) {
-      const ch = lines[i].indexOf(target)
-      if (ch !== -1) {
-        const from = { line: i, ch }
-        const to = { line: i, ch: ch + target.length }
-        editor.replaceRange(replacement, from, to)
-        break
-      }
-    }
-  }
-}
-
-function removeReferenceToOriginalNoteIfPresent(
-  otherReferencesByNote: Record<string, ReferenceCache[]>,
-  originalNote: { path: string; startPosition: EditorPosition },
-) {
-  if (!Object.keys(otherReferencesByNote).includes(originalNote.path)) return
-
-  const refsFromOriginalNote = otherReferencesByNote[originalNote.path]
-  const originalRefStart = originalNote.startPosition
-  const refForExclusion = refsFromOriginalNote.find(
-    (r) =>
-      r.position.start.line === originalRefStart.line &&
-      r.position.start.col === originalRefStart.ch,
-  )
-  if (refForExclusion) {
-    refsFromOriginalNote.remove(refForExclusion)
-    if (refsFromOriginalNote.length === 0) {
-      delete otherReferencesByNote[originalNote.path]
-    }
-  }
-}
-
-function getFilesAndLinksStats(otherReferencesByNote: Record<string, ReferenceCache[]>) {
-  return {
-    filesCount: Object.keys(otherReferencesByNote).length,
-    linksCount: Object.values(otherReferencesByNote).reduce(
-      (count, refs) => count + refs.length,
-      0,
-    ),
   }
 }

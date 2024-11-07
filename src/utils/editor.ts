@@ -35,3 +35,16 @@ export const findLocalFileUnderCursor = (editor: Editor, ctx: MarkdownFileInfo) 
     end: localImageExpectedEnd,
   }
 }
+
+export const replaceFirstOccurrence = (editor: Editor, target: string, replacement: string) => {
+  const lines = editor.getValue().split('\n')
+  for (let i = 0; i < lines.length; i += 1) {
+    const ch = lines[i].indexOf(target)
+    if (ch !== -1) {
+      const from = { line: i, ch }
+      const to = { line: i, ch: ch + target.length }
+      editor.replaceRange(replacement, from, to)
+      break
+    }
+  }
+}
