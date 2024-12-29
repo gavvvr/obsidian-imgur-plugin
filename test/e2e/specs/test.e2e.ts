@@ -61,6 +61,34 @@ describe('Electron Testing', () => {
     })
   })
 
+  context('Note with multiple identical references of existing local image', () => {
+    it('resize the image', async () => {
+      await ObsidianApp.putExampleImageToVault('example-local-image.png')
+      const initialNoteContent = [
+        '![[example-local-image.png]]',
+        'some plain text',
+        '![[example-local-image.png]]',
+      ].join('\n')
+      await ObsidianApp.createNewNoteWithContent(initialNoteContent)
+      await MockingUtils.mockUploadedImageUrl('https://i.imgur.com/sXTI69E.png')
+
+      const somewhereWithinFirstLocalMarkdownImage = { line: 0, ch: 5 }
+      await ObsidianApp.setCursorPositionInActiveNote(somewhereWithinFirstLocalMarkdownImage)
+      await ObsidianApp.uploadToImgurUsingCommandPalette()
+      await ObsidianApp.confirmReplacingAllLinks()
+
+      const noteContent = await ObsidianApp.getTextFromOpenedNote()
+      const expectedContent = [
+        '<!--![[example-local-image.png]]-->',
+        '![](https://i.imgur.com/sXTI69E.png)',
+        '',
+        'some plain text',
+        '![](https://i.imgur.com/sXTI69E.png)',
+      ].join('\n')
+      await expect(noteContent).toBe(expectedContent)
+    })
+  })
+
   context('blank canvas', () => {
     it('uploads clipboard image on PASTE shortcut', async () => {
       await MockingUtils.mockUploadedImageUrl('https://i.imgur.com/QRHZ1pO.png')

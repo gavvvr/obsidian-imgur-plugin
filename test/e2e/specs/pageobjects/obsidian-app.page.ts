@@ -162,6 +162,10 @@ class ObsidianApp {
   async confirmUpload() {
     await $('button=Upload').click()
   }
+
+  async confirmReplacingAllLinks() {
+    await $('//div[@class="modal"]//button[text()="Yes"]').click()
+  }
 }
 
 export default new ObsidianApp()
