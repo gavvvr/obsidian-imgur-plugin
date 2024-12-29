@@ -1,5 +1,7 @@
 // @ts-check
 
+import * as path from 'node:path'
+
 import eslint from '@eslint/js'
 import perfectionist from 'eslint-plugin-perfectionist'
 import * as wdio from 'eslint-plugin-wdio'
@@ -62,7 +64,17 @@ export default tseslint.config(
   },
   {
     files: ['test/e2e/specs/**/*.ts'],
-    extends: [wdio.configs['flat/recommended']],
+    extends: [
+      wdio.configs['flat/recommended'],
+      {
+        languageOptions: {
+          parserOptions: {
+            projectService: true,
+            tsconfigDirName: path.join(import.meta.dirname, 'test/e2e'),
+          },
+        },
+      },
+    ],
   },
   {
     extends: [eslint.configs.recommended],

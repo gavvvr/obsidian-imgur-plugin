@@ -1,7 +1,7 @@
 import { ButtonComponent, Modal } from 'obsidian'
 
 export default class ImageUploadBlockingModal extends Modal {
-  isOpen: boolean
+  isOpen = false
 
   override onOpen(): void {
     this.titleEl.setText('Imgur plugin')

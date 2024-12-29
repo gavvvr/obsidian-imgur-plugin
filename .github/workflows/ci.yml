@@ -40,6 +40,7 @@ jobs:
         with:
           name: lcov.info
           path: coverage/lcov.info
+
   SonarScan:
     needs: Build
     runs-on: ubuntu-latest

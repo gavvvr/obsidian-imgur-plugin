@@ -6,8 +6,8 @@ export default class ImgurAuthenticationStatus {
 
   private authButton?: ButtonComponent
 
-  authButtonClick: (evt: MouseEvent) => void
-  logoutButtonClick: (evt: MouseEvent) => Promise<void>
+  authButtonClick: ((evt: MouseEvent) => void) | undefined
+  logoutButtonClick: ((evt: MouseEvent) => Promise<void>) | undefined
 
   constructor(private readonly parent: HTMLElement) {
     const settingItem = this.parent.createDiv()

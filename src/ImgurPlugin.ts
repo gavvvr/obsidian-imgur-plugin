@@ -92,7 +92,7 @@ export default class ImgurPlugin extends Plugin {
           }
           break
         case false:
-          markdownView.currentMode.clipboardManager.handlePaste(new PasteEventCopy(e))
+          markdownView.currentMode.clipboardManager.handlePaste(new PasteEventCopy(files))
           return
         default:
           return
@@ -101,7 +101,7 @@ export default class ImgurPlugin extends Plugin {
 
     for (const file of files) {
       this.uploadFileAndEmbedImgurImage(file).catch(() => {
-        markdownView.currentMode.clipboardManager.handlePaste(new PasteEventCopy(e))
+        markdownView.currentMode.clipboardManager.handlePaste(new PasteEventCopy(files))
       })
     }
   }
@@ -172,7 +172,11 @@ export default class ImgurPlugin extends Plugin {
     )
   }
 
-  private imgurPluginRightClickHandler = (menu: Menu, editor: Editor, view: MarkdownView) => {
+  private imgurPluginRightClickHandler = (
+    menu: Menu,
+    editor: Editor,
+    view: MarkdownView | MarkdownFileInfo,
+  ) => {
     const localFile = findLocalFileUnderCursor(editor, view)
     if (!localFile) return
 
@@ -293,7 +297,7 @@ export default class ImgurPlugin extends Plugin {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const originalUploadFunction = uploader.upload
     uploader.upload = function (image: File, albumId?: string) {
-      if (!uploader) return
+      if (!uploader) return Promise.resolve('')
       return originalUploadFunction.call(uploader, fixImageTypeIfNeeded(image), albumId)
     }
   }
@@ -347,7 +351,7 @@ export default class ImgurPlugin extends Plugin {
     if (!localFile) return false
     if (checking) return true
 
-    void this.doUploadLocalImage({ image: localFile, editor, noteFile: ctx.file })
+    return void this.doUploadLocalImage({ image: localFile, editor, noteFile: ctx.file })
   }
 
   get authenticatedImgurClient(): AuthenticatedImgurClient | null {

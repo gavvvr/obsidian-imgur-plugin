@@ -25,7 +25,6 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
-    "specs",
     "**/*.ts",
   ],
 }
