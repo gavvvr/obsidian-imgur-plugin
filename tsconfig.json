@@ -10,7 +10,6 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "moduleResolution": "node",
-    "importHelpers": true,
     "isolatedModules": true,
     "lib": ["DOM", "DOM.Iterable", "ES5", "ES6", "ES7"],
     "strictBindCallApply": true
