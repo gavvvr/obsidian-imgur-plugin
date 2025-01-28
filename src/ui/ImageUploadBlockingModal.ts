@@ -3,7 +3,7 @@ import { ButtonComponent, Modal } from 'obsidian'
 export default class ImageUploadBlockingModal extends Modal {
   isOpen: boolean
 
-  onOpen(): void {
+  override onOpen(): void {
     this.titleEl.setText('Imgur plugin')
     this.contentEl.setText('Uploading image...')
 
@@ -18,7 +18,7 @@ export default class ImageUploadBlockingModal extends Modal {
     this.isOpen = true
   }
 
-  onClose(): void {
+  override onClose(): void {
     this.isOpen = false
   }
 }

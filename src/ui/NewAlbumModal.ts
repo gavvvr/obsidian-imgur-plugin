@@ -3,7 +3,7 @@ import { ButtonComponent, Modal, TextAreaComponent, TextComponent } from 'obsidi
 export class NewAlbumModal extends Modal {
   createButtonHandler: (title: string, descriotion?: string) => Promise<void>
 
-  onOpen(): void {
+  override onOpen(): void {
     this.setModalTitle()
     const { newAlbumNameField, newAlbumDescriptionField } = this.createInputs()
     const { createButton, cancelButton } = this.createButtons()

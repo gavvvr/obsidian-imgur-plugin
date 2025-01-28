@@ -271,7 +271,7 @@ export default class ImgurPlugin extends Plugin {
     await this.saveData(this._settings)
   }
 
-  onload() {
+  override onload() {
     void this.initPlugin()
   }
 

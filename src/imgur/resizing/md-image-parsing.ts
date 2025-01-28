@@ -6,8 +6,12 @@ const imgurImageRegexp =
 const parseImgurImages = (line: string): IterableIterator<RegExpMatchArray> =>
   line.matchAll(imgurImageRegexp)
 
-const isMatchUnderCursor = (match: RegExpMatchArray, cursorPosition: number): boolean =>
-  cursorPosition >= match.index && cursorPosition < match.index + match[0].length
+const isMatchUnderCursor = (match: RegExpMatchArray, cursorPosition: number): boolean => {
+  const matchedAt = match.index
+  if (matchedAt === undefined) return false
+
+  return cursorPosition >= matchedAt && cursorPosition < matchedAt + match[0].length
+}
 
 type MatchResult = Readonly<{
   exists: boolean

@@ -13,7 +13,7 @@ export default class RemoteUploadConfirmationDialog extends Modal {
     return this.resp
   }
 
-  onOpen(): void {
+  override onOpen(): void {
     this.titleEl.setText('Imgur plugin')
     this.contentEl.setText('Would you like to upload to Imgur or paste your content locally?')
 
@@ -46,7 +46,7 @@ export default class RemoteUploadConfirmationDialog extends Modal {
     this.close()
   }
 
-  onClose(): void {
+  override onClose(): void {
     if (!this.userResponded) this.deferredResolve({ shouldUpload: undefined })
   }
 }

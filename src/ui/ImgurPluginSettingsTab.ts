@@ -78,7 +78,7 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     })
   }
 
-  hide() {
+  override hide() {
     void this.plugin.saveSettings().then(() => this.plugin.setupImagesUploader())
   }
 

@@ -27,7 +27,7 @@ export default class ImgurAuthModal extends Modal {
     this.authLink = `https://api.imgur.com/oauth2/authorize?client_id=${clientId}&response_type=token`
   }
 
-  onOpen(): void {
+  override onOpen(): void {
     this.opened = true
 
     this.timerDiv = this.modalEl.createDiv()
@@ -50,7 +50,7 @@ export default class ImgurAuthModal extends Modal {
       .onClick(() => this.close())
   }
 
-  onClose() {
+  override onClose() {
     clearInterval(this.intervalId)
     this.opened = false
     if (this.afterClose) void this.afterClose()
