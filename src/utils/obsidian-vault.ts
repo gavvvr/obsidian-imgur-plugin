@@ -23,3 +23,10 @@ export const getAllCachedReferencesForFile = (metadataCache: MetadataCache) => (
   )
   return linksByNote
 }
+
+export const filesAndLinksStatsFrom = (referencesByNote: Record<string, ReferenceCache[]>) => {
+  return {
+    filesCount: Object.keys(referencesByNote).length,
+    linksCount: Object.values(referencesByNote).reduce((count, refs) => count + refs.length, 0),
+  }
+}

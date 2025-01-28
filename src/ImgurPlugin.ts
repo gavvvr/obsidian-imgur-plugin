@@ -29,7 +29,7 @@ import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploa
 import { allFilesAreImages } from './utils/FileList'
 import { findLocalFileUnderCursor, replaceFirstOccurrence } from './utils/editor'
 import { fixImageTypeIfNeeded, removeReferenceIfPresent } from './utils/misc'
-import { getAllCachedReferencesForFile } from './utils/obsidian-vault'
+import { filesAndLinksStatsFrom, getAllCachedReferencesForFile } from './utils/obsidian-vault'
 import { generatePseudoRandomId } from './utils/pseudo-random'
 
 interface LocalImageInEditor {
@@ -218,7 +218,7 @@ export default class ImgurPlugin extends Plugin {
     remoteImageUrl: string,
     otherReferencesByNote: Record<string, ReferenceCache[]>,
   ) {
-    const stats = getFilesAndLinksStats(otherReferencesByNote)
+    const stats = filesAndLinksStatsFrom(otherReferencesByNote)
     const dialogBox = new UpdateLinksConfirmationModal(this.app, localFile.path, stats)
     dialogBox.onDoNotUpdateClick(() => dialogBox.close())
     dialogBox.onDoUpdateClick(() => {
@@ -438,15 +438,5 @@ export default class ImgurPlugin extends Plugin {
   private get activeEditor(): Editor {
     const mdView = this.app.workspace.getActiveViewOfType(MarkdownView)
     return mdView.editor
-  }
-}
-
-function getFilesAndLinksStats(otherReferencesByNote: Record<string, ReferenceCache[]>) {
-  return {
-    filesCount: Object.keys(otherReferencesByNote).length,
-    linksCount: Object.values(otherReferencesByNote).reduce(
-      (count, refs) => count + refs.length,
-      0,
-    ),
   }
 }
