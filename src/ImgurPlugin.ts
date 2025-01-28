@@ -29,6 +29,7 @@ import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploa
 import { allFilesAreImages } from './utils/FileList'
 import { findLocalFileUnderCursor, replaceFirstOccurrence } from './utils/editor'
 import { fixImageTypeIfNeeded } from './utils/misc'
+import { getAllCachedReferencesForFile } from './utils/obsidian-vault'
 import { generatePseudoRandomId } from './utils/pseudo-random'
 
 interface LocalImageInEditor {
@@ -204,27 +205,7 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private getAllCachedReferencesForFile(file: TFile) {
-    const allLinks = this.app.metadataCache.resolvedLinks
-
-    const notesWithLinks = []
-    for (const [notePath, noteLinks] of Object.entries(allLinks)) {
-      for (const [linkName] of Object.entries(noteLinks)) {
-        if (linkName === file.name) notesWithLinks.push(notePath)
-      }
-    }
-
-    const linksByNote = notesWithLinks.reduce(
-      (acc, note) => {
-        const noteMetadata = this.app.metadataCache.getCache(note)
-        const noteLinks = noteMetadata.embeds
-        if (noteLinks) {
-          acc[note] = noteLinks.filter((l) => l.link === file.name)
-        }
-        return acc
-      },
-      {} as Record<string, ReferenceCache[]>,
-    )
-    return linksByNote
+    return getAllCachedReferencesForFile(this.app.metadataCache)(file)
   }
 
   private showLinksUpdateDialog(
