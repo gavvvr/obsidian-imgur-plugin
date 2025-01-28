@@ -24,7 +24,6 @@ export default function buildUploaderFrom(
       return undefined
     }
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const exhaustiveCheck: never = settings.uploadStrategy
+    return settings.uploadStrategy satisfies never
   }
 }
