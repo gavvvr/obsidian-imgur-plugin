@@ -29,7 +29,11 @@ import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploa
 import { allFilesAreImages } from './utils/FileList'
 import { findLocalFileUnderCursor, replaceFirstOccurrence } from './utils/editor'
 import { fixImageTypeIfNeeded, removeReferenceIfPresent } from './utils/misc'
-import { filesAndLinksStatsFrom, getAllCachedReferencesForFile } from './utils/obsidian-vault'
+import {
+  filesAndLinksStatsFrom,
+  getAllCachedReferencesForFile,
+  replaceAllLocalReferencesWithRemoteOne,
+} from './utils/obsidian-vault'
 import { generatePseudoRandomId } from './utils/pseudo-random'
 
 interface LocalImageInEditor {
@@ -224,7 +228,7 @@ export default class ImgurPlugin extends Plugin {
     dialogBox.onDoUpdateClick(() => {
       dialogBox.disableButtons()
       dialogBox.setContent('Working...')
-      this.replaceAllLocalReferencesWithRemoteOne(otherReferencesByNote, remoteImageUrl)
+      replaceAllLocalReferencesWithRemoteOne(this.app.vault, otherReferencesByNote, remoteImageUrl)
         .catch((e) => {
           new InfoModal(
             this.app,
@@ -237,32 +241,6 @@ export default class ImgurPlugin extends Plugin {
       new Notice(`Updated ${stats.linksCount} links in ${stats.filesCount} files`)
     })
     dialogBox.open()
-  }
-
-  private async replaceAllLocalReferencesWithRemoteOne(
-    referencesByNotes: Record<string, ReferenceCache[]>,
-    remoteImageUrl: string,
-  ) {
-    for (const [notePath, refs] of Object.entries(referencesByNotes)) {
-      const noteFile = this.app.vault.getFileByPath(notePath)
-      const refsStartOffsetsSortedDescending = refs
-        .map((ref) => ({
-          start: ref.position.start.offset,
-          end: ref.position.end.offset,
-        }))
-        .sort((ref1, ref2) => ref2.start - ref1.start)
-
-      await this.app.vault.process(noteFile, (noteContent) => {
-        let updatedContent = noteContent
-        refsStartOffsetsSortedDescending.forEach((refPos) => {
-          updatedContent =
-            updatedContent.substring(0, refPos.start) +
-            `![](${remoteImageUrl})` +
-            updatedContent.substring(refPos.end)
-        })
-        return updatedContent
-      })
-    }
   }
 
   private async uploadLocalImageFromEditor(
