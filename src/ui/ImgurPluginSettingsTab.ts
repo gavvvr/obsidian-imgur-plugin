@@ -26,12 +26,12 @@ export default class ImgurPluginSettingsTab extends PluginSettingTab {
     this.plugin.registerObsidianProtocolHandler('imgur-oauth', (params) => {
       if (!this.authModal?.isOpen) return
 
-      if (params.error) {
-        new Notice(`Authentication failed with error: ${params.error}`)
+      if (params['error']) {
+        new Notice(`Authentication failed with error: ${params['error']}`)
         return
       }
 
-      const mappedData = params.hash.split('&').map((p) => {
+      const mappedData = params['hash'].split('&').map((p) => {
         const sp = p.split('=')
         return [sp[0], sp[1]] as [string, string]
       })
