@@ -1,4 +1,4 @@
-# Obsidian Imgur Plugin
+# Imgur Plugin for Obsidian
 
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=gavvvr_obsidian-imgur-plugin&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=gavvvr_obsidian-imgur-plugin)
 [![Installations count](https://img.shields.io/github/downloads/gavvvr/obsidian-imgur-plugin/main.js.svg)][installation-instructions]
