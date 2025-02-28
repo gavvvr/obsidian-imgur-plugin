@@ -42,6 +42,7 @@ const pluginPath = path.join(selectedVaultPath, '.obsidian', 'plugins', manifest
 
 fs.mkdir(pluginPath, { recursive: true })
 await fs.copyFile(localManifestPath, path.join(pluginPath, 'manifest.json'))
+await fs.writeFile(path.join(pluginPath, '.hotreload'), '')
 
 const esbuildCtx = await esbuild.context({
   ...sharedEsbuildConfig,
