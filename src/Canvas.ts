@@ -3,8 +3,9 @@ import { Canvas } from 'obsidian'
 import ImgurPlugin from './ImgurPlugin'
 import ImageUploadBlockingModal from './ui/ImageUploadBlockingModal'
 import RemoteUploadConfirmationDialog from './ui/RemoteUploadConfirmationDialog'
-import { allFilesAreImages } from './utils/FileList'
 import { buildPasteEventCopy } from './utils/events'
+import { allFilesAreImages } from './utils/FileList'
+import { getDateTimeFormatted } from './utils/getDateTimeFormatted'
 
 export function createImgurCanvasPasteHandler(
   plugin: ImgurPlugin,
@@ -77,9 +78,10 @@ function uploadImageOnCanvas(canvas: Canvas, plugin: ImgurPlugin, e: ClipboardEv
 }
 
 function pasteRemoteImageToCanvas(canvas: Canvas, imageUrl: string) {
+  const dateTimeNow = getDateTimeFormatted()
   canvas.createTextNode({
     pos: canvas.posCenter(),
     position: 'center',
-    text: `![](${imageUrl})`,
+    text: `![${dateTimeNow}](${imageUrl})`,
   })
 }

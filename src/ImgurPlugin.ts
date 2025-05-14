@@ -11,9 +11,9 @@ import {
   TFile,
 } from 'obsidian'
 
-import { createImgurCanvasPasteHandler } from './Canvas'
 import DragEventCopy from './aux-event-classes/DragEventCopy'
 import PasteEventCopy from './aux-event-classes/PasteEventCopy'
+import { createImgurCanvasPasteHandler } from './Canvas'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
 import ImgurSize from './imgur/resizing/ImgurSize'
 import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
@@ -26,8 +26,9 @@ import ApiError from './uploader/ApiError'
 import ImageUploader from './uploader/ImageUploader'
 import buildUploaderFrom from './uploader/imgUploaderFactory'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
-import { allFilesAreImages } from './utils/FileList'
 import { findLocalFileUnderCursor, replaceFirstOccurrence } from './utils/editor'
+import { allFilesAreImages } from './utils/FileList'
+import { getDateTimeFormatted } from './utils/getDateTimeFormatted'
 import { fixImageTypeIfNeeded, removeReferenceIfPresent } from './utils/misc'
 import {
   filesAndLinksStatsFrom,
@@ -402,8 +403,9 @@ export default class ImgurPlugin extends Plugin {
   }
 
   private embedMarkDownImage(pasteId: string, imageUrl: string) {
+    const dateTimeNow = getDateTimeFormatted()
     const progressText = ImgurPlugin.progressTextFor(pasteId)
-    const markDownImage = `![](${imageUrl})`
+    const markDownImage = `![${dateTimeNow}](${imageUrl})`
 
     replaceFirstOccurrence(this.activeEditor, progressText, markDownImage)
   }
