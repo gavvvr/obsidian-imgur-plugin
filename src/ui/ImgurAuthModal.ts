@@ -12,6 +12,10 @@ export default class ImgurAuthModal extends Modal {
     return this.opened
   }
 
+  set isOpen(value: boolean) {
+    this.opened = value
+  }
+
   private timerDiv: HTMLDivElement
 
   private readonly authLink: string
