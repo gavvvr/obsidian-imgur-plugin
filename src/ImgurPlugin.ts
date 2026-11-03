@@ -11,9 +11,8 @@ import {
   TFile,
 } from 'obsidian'
 
-import { createImgurCanvasPasteHandler } from './Canvas'
 import DragEventCopy from './aux-event-classes/DragEventCopy'
-import PasteEventCopy from './aux-event-classes/PasteEventCopy'
+import { createImgurCanvasPasteHandler } from './Canvas'
 import AuthenticatedImgurClient from './imgur/AuthenticatedImgurClient'
 import ImgurSize from './imgur/resizing/ImgurSize'
 import editorCheckCallbackFor from './imgur/resizing/plugin-callback'
@@ -26,8 +25,8 @@ import ApiError from './uploader/ApiError'
 import ImageUploader from './uploader/ImageUploader'
 import buildUploaderFrom from './uploader/imgUploaderFactory'
 import ImgurAuthenticatedUploader from './uploader/imgur/ImgurAuthenticatedUploader'
-import { allFilesAreImages } from './utils/FileList'
 import { findLocalFileUnderCursor, replaceFirstOccurrence } from './utils/editor'
+import { allFilesAreImages } from './utils/FileList'
 import { fixImageTypeIfNeeded, removeReferenceIfPresent } from './utils/misc'
 import {
   filesAndLinksStatsFrom,
@@ -64,23 +63,21 @@ export default class ImgurPlugin extends Plugin {
     _: Editor,
     markdownView: MarkdownView,
   ) => {
-    if (e instanceof PasteEventCopy) return
-
     if (!this.imgUploader) {
       ImgurPlugin.showUnconfiguredPluginNotice()
       return
     }
 
-    const { files } = e.clipboardData
+    const clipboardFiles = e.clipboardData?.files
+    if (!clipboardFiles || !allFilesAreImages(clipboardFiles)) return
 
-    if (!allFilesAreImages(files)) return
-
+    // Keep the File objects, not the event's FileList, before waiting for the dialog.
+    const files = Array.from(clipboardFiles)
     e.preventDefault()
 
     if (this._settings.showRemoteUploadConfirmation) {
       const modal = new RemoteUploadConfirmationDialog(this.app)
       modal.open()
-
       const userResp = await modal.response()
       switch (userResp.shouldUpload) {
         case undefined:
@@ -92,7 +89,7 @@ export default class ImgurPlugin extends Plugin {
           }
           break
         case false:
-          markdownView.currentMode.clipboardManager.handlePaste(new PasteEventCopy(e))
+          await this.pasteImagesLocally(markdownView, files)
           return
         default:
           return
@@ -101,11 +98,46 @@ export default class ImgurPlugin extends Plugin {
 
     for (const file of files) {
       this.uploadFileAndEmbedImgurImage(file).catch(() => {
-        markdownView.currentMode.clipboardManager.handlePaste(new PasteEventCopy(e))
+        void this.pasteImagesLocally(markdownView, [file])
       })
     }
   }
 
+  // Use public Obsidian APIs instead of the internal clipboardManager.handlePaste().
+  private async pasteImagesLocally(markdownView: MarkdownView, files: File[]): Promise<void> {
+    const note = markdownView.file
+    if (!note) {
+      new Notice('Imgur: open an editable Markdown note to paste an image locally.')
+      return
+    }
+
+    const extensions: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+      'image/svg+xml': 'svg',
+      'image/avif': 'avif',
+      'image/bmp': 'bmp',
+    }
+
+    for (const file of files) {
+      try {
+        const extension = extensions[file.type.toLowerCase()] ?? 'png'
+        const originalName = file.name.trim()
+        const name = /\.[a-z0-9]{2,6}$/i.test(originalName)
+          ? originalName
+          : `Pasted image ${Date.now()}.${extension}`
+        const path = await this.app.fileManager.getAvailablePathForAttachment(name, note.path)
+        const saved = await this.app.vault.createBinary(path, await file.arrayBuffer())
+        const link = this.app.fileManager.generateMarkdownLink(saved, note.path)
+        markdownView.editor.replaceSelection(`${link.startsWith('!') ? '' : '!'}${link}\n`)
+      } catch (error) {
+        console.error('[Imgur local paste] Failed to save image:', error)
+        new Notice('Imgur: failed to save image locally. Check the developer console.')
+      }
+    }
+  }
   private customDropEventListener = async (e: DragEvent, _: Editor, markdownView: MarkdownView) => {
     if (e instanceof DragEventCopy) return
 
