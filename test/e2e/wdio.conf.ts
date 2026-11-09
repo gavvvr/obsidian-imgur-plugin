@@ -1,4 +1,4 @@
-/// <reference types="wdio-electron-service" />
+/// <reference types="@wdio/electron-service" />
 import ObsidianApp from './specs/pageobjects/obsidian-app.page'
 
 const debug = process.env.DEBUG
