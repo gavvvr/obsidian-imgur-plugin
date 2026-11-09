@@ -1,0 +1,5 @@
+allowBuilds:
+  edgedriver: false
+  electron: false
+  esbuild: false
+  geckodriver: false
