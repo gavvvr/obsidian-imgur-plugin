@@ -20,9 +20,10 @@ class ObsidianApp {
 
   async createAndOpenFreshVault() {
     await browser.execute((testVaultDir: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
       const { ipcRenderer } = require('electron')
       const shouldCreateNewVault = true
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       ipcRenderer.sendSync('vault-open', testVaultDir, shouldCreateNewVault)
     }, TEST_VAULT_DIR)
 
@@ -142,10 +143,12 @@ class ObsidianApp {
 
   async loadSampleImageToClipboard() {
     await browser.execute((imageBase64: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
       const { nativeImage, clipboard } = require('electron')
       const dataUrl = 'data:image/png;base64,' + imageBase64
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const sampleImage = nativeImage.createFromDataURL(dataUrl)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       clipboard.writeImage(sampleImage)
     }, EXAMPLE_PNG_IMAGE_BASE64)
   }
