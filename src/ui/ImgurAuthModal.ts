@@ -6,14 +6,14 @@ const OPEN_BROWSER_IN_SECONDS = 4
 export default class ImgurAuthModal extends Modal {
   secondsLeft = OPEN_BROWSER_IN_SECONDS
 
-  private opened = false
+  #opened = false
 
   get isOpen(): boolean {
-    return this.opened
+    return this.#opened
   }
 
   set isOpen(value: boolean) {
-    this.opened = value
+    this.#opened = value
   }
 
   private timerDiv: HTMLDivElement
@@ -32,7 +32,7 @@ export default class ImgurAuthModal extends Modal {
   }
 
   override onOpen(): void {
-    this.opened = true
+    this.#opened = true
 
     this.timerDiv = this.modalEl.createDiv()
     this.updateText()
@@ -56,7 +56,7 @@ export default class ImgurAuthModal extends Modal {
 
   override onClose() {
     clearInterval(this.intervalId)
-    this.opened = false
+    this.#opened = false
     if (this.afterClose) void this.afterClose()
   }
 
