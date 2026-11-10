@@ -31,7 +31,7 @@
     "@commitlint/config-conventional": "21.2.4",
     "@commitlint/cz-commitlint": "21.2.4",
     "@eslint/js": "^10.0.1",
-    "@types/node": "22.12.0",
+    "@types/node": "26.6.6",
     "@vitest/coverage-v8": "5.1.0",
     "@vitest/ui": "5.1.0",
     "@wdio/cli": "10.2.0",
@@ -63,5 +63,11 @@
     "*.{ts,js,css,md}": "prettier --write",
     "*.ts": "eslint --cache --fix"
   },
-  "packageManager": "pnpm@12.18.0"
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^12.0.0",
+      "onFail": "download"
+    }
+  }
 }
