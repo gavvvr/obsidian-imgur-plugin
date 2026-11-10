@@ -20,7 +20,7 @@ describe('Electron Testing', () => {
       await ObsidianApp.confirmUpload()
 
       const noteContent = await ObsidianApp.getTextFromOpenedNote()
-      await expect(noteContent).toBe('![](https://i.imgur.com/w88wB4I.png)\n')
+      expect(noteContent).toBe('![](https://i.imgur.com/w88wB4I.png)\n')
     })
   })
 
@@ -34,8 +34,8 @@ describe('Electron Testing', () => {
       await ObsidianApp.resizeToSmallThumbnailUsingCommandPalette()
 
       const noteContent = await ObsidianApp.getTextFromOpenedNote()
-      await expect(noteContent).toBe(
-        '[![](https://i.imgur.com/JGnCrC9t.png)](https://i.imgur.com/JGnCrC9.png)',
+      expect(noteContent).toBe(
+        '[![](https://i.imgur.com/JGnCrC9t.png)](https://i.imgur.com/JGnCrC9.png)'
       )
     })
   })
@@ -57,7 +57,7 @@ describe('Electron Testing', () => {
         '![](https://i.imgur.com/sXTI69E.png)',
         '',
       ].join('\n')
-      await expect(noteContent).toBe(expectedContent)
+      expect(noteContent).toBe(expectedContent)
     })
   })
 
@@ -85,7 +85,7 @@ describe('Electron Testing', () => {
         'some plain text',
         '![](https://i.imgur.com/sXTI69E.png)',
       ].join('\n')
-      await expect(noteContent).toBe(expectedContent)
+      expect(noteContent).toBe(expectedContent)
     })
   })
 
@@ -100,7 +100,7 @@ describe('Electron Testing', () => {
 
       const canvasCard = await ObsidianApp.findAndSwitchToCanvasCard()
       const canvasCardText = await canvasCard.getText()
-      await expect(canvasCardText).toBe('![](https://i.imgur.com/QRHZ1pO.png)')
+      expect(canvasCardText).toBe('![](https://i.imgur.com/QRHZ1pO.png)')
     })
   })
 })
