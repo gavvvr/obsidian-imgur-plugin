@@ -3,6 +3,7 @@
 import eslint from '@eslint/js'
 import perfectionist from 'eslint-plugin-perfectionist'
 import * as wdio from 'eslint-plugin-wdio'
+import { defineConfig } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
@@ -10,22 +11,22 @@ const sortImportsSettings = {
   type: 'natural',
   order: 'asc',
   ignoreCase: false,
-  newlinesBetween: 'always',
+  newlinesBetween: 1,
   groups: [
     'type',
     'builtin',
     'external',
-    'internal-type',
-    'internal',
-    ['parent-type', 'sibling-type', 'index-type'],
+    'type-internal',
+    'value-internal',
+    ['type-parent', 'type-sibling', 'type-index'],
     ['parent', 'sibling', 'index'],
-    'object',
+    'ts-equals-import',
     'unknown',
   ],
   environment: 'node',
 }
 
-export default tseslint.config(
+export default defineConfig(
   eslint.configs.recommended,
   {
     ...perfectionist.configs['recommended-natural'],
