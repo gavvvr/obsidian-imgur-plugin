@@ -63,7 +63,7 @@ function uploadImageOnCanvas(canvas: Canvas, plugin: ImgurPlugin, e: ClipboardEv
   return plugin.imgUploader
     .upload(file, plugin.settings.albumToUpload)
     .then((url) => {
-      if (!modal.isOpen) {
+      if (!modal.isModalOpen) {
         return
       }
 
