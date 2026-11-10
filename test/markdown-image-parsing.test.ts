@@ -42,7 +42,7 @@ describe('findImgurMarkdownImage', () => {
       "GIVEN line '$line' an error reporting incorrect image id size will be thrown",
       ({ line }) => {
         const match = findImgurMarkdownImage(line, 0)
-        expect(() => match.mdImagePieces).toThrowError()
+        expect(() => match.mdImagePieces).toThrow()
       },
     )
   })
