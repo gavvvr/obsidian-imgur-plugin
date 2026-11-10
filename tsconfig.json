@@ -3,7 +3,7 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "esnext",
-    "target": "es6",
+    "target": "es2021",
     "strict": false,
     "allowJs": true,
     "noImplicitAny": true,
@@ -12,7 +12,7 @@
     "moduleResolution": "bundler",
     "rootDir": ".",
     "isolatedModules": true,
-    "lib": ["DOM", "DOM.Iterable", "ES5", "ES6", "ES7"],
+    "lib": ["DOM", "DOM.Iterable", "ES2021"],
     "strictBindCallApply": true
   },
   "include": ["**/*.ts"],
