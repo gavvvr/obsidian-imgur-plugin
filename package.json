@@ -64,6 +64,11 @@
     "*.ts": "eslint --cache --fix"
   },
   "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^22.0.0 || ^24.0.0 || ^26.0.0",
+      "onFail": "error"
+    },
     "packageManager": {
       "name": "pnpm",
       "version": "^12.0.0",
