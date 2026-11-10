@@ -13,14 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - uses: actions/checkout@v7
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@26
+          install: false
       - name: Environment details
-        run: npm version
+        run: pnpm dlx envinfo --system --binaries
       - name: Build
         id: build
         run: |

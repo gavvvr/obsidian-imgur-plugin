@@ -14,16 +14,16 @@ jobs:
   Build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@26
+          install: false
       - name: Environment details
-        run: pnpm version
+        run: pnpm dlx envinfo --system --binaries
       - name: Install dependencies
         run: pnpm install
       - name: Build
@@ -36,7 +36,7 @@ jobs:
         with:
           files: 'test-results.xml'
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lcov.info
           path: coverage/lcov.info
@@ -44,11 +44,11 @@ jobs:
     needs: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
       - name: Download coverage data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: lcov.info
           path: coverage/
