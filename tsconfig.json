@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "inlineSourceMap": true,
     "inlineSources": true,
-    "module": "ESNext",
-    "target": "ES6",
+    "module": "esnext",
+    "target": "es6",
+    "strict": false,
     "allowJs": true,
     "noImplicitAny": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "rootDir": ".",
     "isolatedModules": true,
     "lib": ["DOM", "DOM.Iterable", "ES5", "ES6", "ES7"],
     "strictBindCallApply": true

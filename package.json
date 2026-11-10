@@ -54,7 +54,7 @@
     "obsidian": "1.7.2",
     "obsidian-utils": "0.10.2",
     "prettier": "3.9.10",
-    "typescript": "5.7.3",
+    "typescript": "^6.0.3",
     "typescript-eslint": "8.72.1",
     "vitest": "3.0.4",
     "webdriverio": "10.2.0"
